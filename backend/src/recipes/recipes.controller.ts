@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Query, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Body,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { AirtableService } from '../airtable/airtable.service';
 import { Recipe } from '../interfaces/recipe.interface';
 import { CreateRecipeDto } from './create-recipe.dto';
@@ -19,5 +27,16 @@ export class RecipesController {
   @Post()
   async create(@Body() createRecipeDto: CreateRecipeDto): Promise<Recipe> {
     return await this.airtableService.createRecipe(createRecipeDto);
+  }
+
+  @Get(':id')
+  async getOne(@Param('id') id: string): Promise<Recipe> {
+    return await this.airtableService.getRecipeById(id);
+  }
+
+  @Delete(':id')
+  async deleteOne(@Param('id') id: string): Promise<{ message: string }> {
+    await this.airtableService.deleteRecipeById(id);
+    return { message: 'Recipe deleted successfully' };
   }
 }

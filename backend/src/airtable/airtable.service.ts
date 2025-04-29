@@ -84,4 +84,23 @@ export class AirtableService {
 
     return response.data as unknown as Recipe;
   }
+
+  async getRecipeById(id: string): Promise<Recipe> {
+    const url = `${this.apiUrl}/${process.env.AIRTABLE_RECIPES_TABLE_NAME}/${id}`;
+
+    const response = await axios.get<{ id: string; fields: Recipe['fields'] }>(
+      url,
+      { headers: this.headers },
+    );
+
+    return {
+      id: response.data.id,
+      fields: response.data.fields,
+    };
+  }
+
+  async deleteRecipeById(id: string): Promise<void> {
+    const url = `${this.apiUrl}/${process.env.AIRTABLE_RECIPES_TABLE_NAME}/${id}`;
+    await axios.delete(url, { headers: this.headers });
+  }
 }

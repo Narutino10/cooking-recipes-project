@@ -1,30 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { Recipe } from '../interfaces/recipe.interface';
 import { CreateRecipeDto } from '../recipes/create-recipe.dto';
 
 @Injectable()
 export class AirtableService {
-  private readonly API_URL = 'https://api.airtable.com/v0';
-  private readonly BASE_ID = 'appHJEmvm3o1OKZHc'; // Ton vrai ID de base
-  private readonly TABLE_NAME = 'Recettes'; // Nom exact de ta table
+  private readonly BASE_ID = 'appHJEmvm3o1OKZHc';
+  private readonly TABLE_NAME = 'Recettes'; // à adapter si besoin
   private readonly API_TOKEN =
-    'patxO1XSdTTifeEsx.c525a63972ecc6e288382719cbf676296a57da92938d8c271eebbaa20baac3ab'; // Ton token
+    'patxO1XSdTTifeEsx.c525a63972ecc6e288382719cbf676296a57da92938d8c271eebbaa20baac3ab';
 
+  private readonly baseUrl = `https://api.airtable.com/v0/${this.BASE_ID}`;
   private readonly headers = {
-    Authorization: `Bearer patxO1XSdTTifeEsx.c525a63972ecc6e288382719cbf676296a57da92938d8c271eebbaa20baac3ab`,
+    Authorization: `Bearer ${this.API_TOKEN}`,
     'Content-Type': 'application/json',
   };
 
-  private get baseUrl() {
-    return `${this.API_URL}/${this.BASE_ID}/${this.TABLE_NAME}`;
-  }
-
   async getAllRecipes(): Promise<Recipe[]> {
-    const response = await axios.get<{ records: Recipe[] }>(this.baseUrl, {
+    const url = `${this.baseUrl}/${this.TABLE_NAME}`;
+    const res: AxiosResponse<{ records: Recipe[] }> = await axios.get(url, {
       headers: this.headers,
     });
-    return response.data.records;
+    return res.data.records;
   }
 
   async searchRecipes(filters: {
@@ -49,19 +46,19 @@ export class AirtableService {
 
     const filterFormula =
       formulaParts.length > 0 ? `AND(${formulaParts.join(',')})` : '';
-
+    const url = `${this.baseUrl}/${this.TABLE_NAME}`;
     const params = filterFormula ? { filterByFormula: filterFormula } : {};
 
-    const response = await axios.get<{ records: Recipe[] }>(this.baseUrl, {
+    const res: AxiosResponse<{ records: Recipe[] }> = await axios.get(url, {
       headers: this.headers,
       params,
     });
 
-    return response.data.records;
+    return res.data.records;
   }
 
   async createRecipe(data: CreateRecipeDto): Promise<Recipe> {
-    const airtableFields = {
+    const fields = {
       Nom: data.name,
       'Type de plat': data.type,
       Ingrédients: data.ingredients,
@@ -71,36 +68,31 @@ export class AirtableService {
       'Analyse nutritionnelle': data.nutritionId ? [data.nutritionId] : [],
     };
 
-    const response = await axios.post<{ id: string; fields: Recipe['fields'] }>(
-      this.baseUrl,
-      { fields: airtableFields },
-      { headers: this.headers },
-    );
+    const url = `${this.baseUrl}/${this.TABLE_NAME}`;
+    const res: AxiosResponse<{ id: string; fields: Recipe['fields'] }> =
+      await axios.post(url, { fields }, { headers: this.headers });
 
     return {
-      id: response.data.id,
-      fields: response.data.fields,
+      id: res.data.id,
+      fields: res.data.fields,
     };
   }
 
   async getRecipeById(id: string): Promise<Recipe> {
-    const url = `${this.baseUrl}/${id}`;
-
-    const response = await axios.get<{ id: string; fields: Recipe['fields'] }>(
-      url,
-      {
+    const url = `${this.baseUrl}/${this.TABLE_NAME}/${id}`;
+    const res: AxiosResponse<{ id: string; fields: Recipe['fields'] }> =
+      await axios.get(url, {
         headers: this.headers,
-      },
-    );
+      });
 
     return {
-      id: response.data.id,
-      fields: response.data.fields,
+      id: res.data.id,
+      fields: res.data.fields,
     };
   }
 
   async deleteRecipeById(id: string): Promise<void> {
-    const url = `${this.baseUrl}/${id}`;
+    const url = `${this.baseUrl}/${this.TABLE_NAME}/${id}`;
     await axios.delete(url, { headers: this.headers });
   }
 }

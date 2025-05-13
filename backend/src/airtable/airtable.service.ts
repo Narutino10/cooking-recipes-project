@@ -6,7 +6,9 @@ import { CreateRecipeDto } from '../recipes/create-recipe.dto';
 @Injectable()
 export class AirtableService {
   private readonly BASE_ID = 'appHJEmvm3o1OKZHc';
-  private readonly TABLE_NAME = 'Recettes';
+  //private readonly TABLE_NAME = 'Recettes';
+  
+  private readonly TABLE_NAME = 'tblKk1r28rRqvfenz';
   private readonly API_TOKEN =
     'patxO1XSdTTifeEsx.c525a63972ecc6e288382719cbf676296a57da92938d8c271eebbaa20baac3ab';
 

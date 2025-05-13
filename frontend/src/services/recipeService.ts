@@ -15,20 +15,10 @@ export const getRecipeById = async (id: string): Promise<Recipe> => {
 };
 
 export const createRecipe = async (data: CreateRecipeDto): Promise<Recipe> => {
-  const payload = {
-    fields: {
-      Nom: data.name,
-      'Type de plat': data.type,
-      Ingrédients: data.ingredients, // tableau d’IDs
-      'Nombre de personnes': data.nbPersons,
-      Intolérances: data.intolerances,
-      Instructions: data.instructions,
-    },
-  };
-
-  const response = await axios.post(`${API_URL}/recipes`, payload);
+  const response = await axios.post(`${API_URL}/recipes`, data);
   return response.data;
 };
+
 
 
 export async function searchRecipes(query: {

@@ -73,17 +73,24 @@ export class AirtableService {
   console.log('📦 Données envoyées à Airtable :', fields);
 
   const url = `${this.baseUrl}/${this.TABLE_NAME}`;
-  const res = await axios.post<{ id: string; fields: Recipe['fields'] }>(
-    url,
-    { fields },
-    { headers: this.headers }
-  );
 
-  return {
-    id: res.data.id,
-    fields: res.data.fields,
-  };
-}
+  try {
+    const res = await axios.post<{ id: string; fields: Recipe['fields'] }>(
+      url,
+      { fields },
+      { headers: this.headers }
+    );
+
+    return {
+      id: res.data.id,
+      fields: res.data.fields,
+    };
+  } catch (error) {
+    console.error('❌ Erreur lors de la requête Airtable :', error.response?.data || error);
+    throw error;
+  }
+  }
+
 
 
 

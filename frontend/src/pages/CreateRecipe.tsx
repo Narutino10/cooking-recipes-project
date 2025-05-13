@@ -11,7 +11,7 @@ const CreateRecipe = () => {
     type: '',
     ingredients: [] as string[],
     nbPersons: 1,
-    intolerances: '',
+    intolerances: [] as string[],
     instructions: '',
   });
 
@@ -24,44 +24,55 @@ const CreateRecipe = () => {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'nbPersons' ? Number(value) : value,
+    }));
   };
 
   const handleIngredientsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
-    setFormData({ ...formData, ingredients: selected });
-  };
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  const payload = {
-    name: formData.name,
-    type: formData.type,
-    ingredients: formData.ingredients, // ✅ liste d’IDs
-    nbPersons: Number(formData.nbPersons),
-    intolerances: formData.intolerances ? [formData.intolerances] : [],
-    instructions: formData.instructions,
+    setFormData((prev) => ({ ...prev, ingredients: selected }));
   };
 
-  try {
-    await createRecipe(payload);
-    alert('Recette créée avec succès !');
-    setFormData({
-      name: '',
-      type: '',
-      ingredients: [],
-      nbPersons: 1,
-      intolerances: '',
-      instructions: '',
-    });
-  } catch (err) {
-    console.error('Erreur lors de la création :', err);
-    alert('Erreur lors de la création de la recette.');
-  }
-};
+  const handleIntolerancesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
+    setFormData((prev) => ({ ...prev, intolerances: selected }));
+  };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const payload = {
+      name: formData.name,
+      type: formData.type,
+      ingredients: formData.ingredients,
+      nbPersons: formData.nbPersons,
+      intolerances: formData.intolerances,
+      instructions: formData.instructions,
+    };
+
+    console.log('🧾 Payload envoyé :', payload);
+
+    try {
+      await createRecipe(payload);
+      alert('Recette créée avec succès !');
+      setFormData({
+        name: '',
+        type: '',
+        ingredients: [],
+        nbPersons: 1,
+        intolerances: [],
+        instructions: '',
+      });
+    } catch (err) {
+      console.error('Erreur lors de la création :', err);
+      alert('Erreur lors de la création de la recette.');
+    }
+  };
 
   return (
     <div className="create-recipe">
@@ -85,7 +96,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           required
         />
 
-        <label>Ingrédients (Ctrl+clic pour multiple) :</label>
+        <label>Ingrédients (Ctrl+clic pour sélectionner plusieurs) :</label>
         <select
           multiple
           name="ingredients"
@@ -96,7 +107,6 @@ const handleSubmit = async (e: React.FormEvent) => {
             <option key={ing.id} value={ing.id}>
               {ing.fields.Nom}
             </option>
-
           ))}
         </select>
 
@@ -109,9 +119,13 @@ const handleSubmit = async (e: React.FormEvent) => {
           required
         />
 
-        <label>Intolérances :</label>
-        <select name="intolerances" value={formData.intolerances} onChange={handleChange}>
-          <option value="">Aucune</option>
+        <label>Intolérances (Ctrl+clic pour sélectionner plusieurs) :</label>
+        <select
+          multiple
+          name="intolerances"
+          value={formData.intolerances}
+          onChange={handleIntolerancesChange}
+        >
           <option value="Lactose">Lactose</option>
           <option value="Gluten">Gluten</option>
           <option value="Arachides">Arachides</option>

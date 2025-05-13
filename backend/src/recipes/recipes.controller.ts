@@ -26,9 +26,14 @@ export class RecipesController {
 
   @Post()
   async create(@Body() createRecipeDto: CreateRecipeDto): Promise<Recipe> {
-    console.log('🧾 Reçu du frontend :', createRecipeDto); 
+  console.log('🧾 Reçu du frontend :', createRecipeDto);
+  try {
     return await this.airtableService.createRecipe(createRecipeDto);
+  } catch (error) {
+    console.error('❌ Erreur lors de la création dans le controller :', error);
+    throw error;
   }
+}
 
   @Get(':id')
   async getOne(@Param('id') id: string): Promise<Recipe> {

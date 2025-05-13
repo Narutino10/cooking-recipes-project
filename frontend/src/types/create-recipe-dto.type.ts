@@ -1,9 +1,9 @@
 export interface CreateRecipeDto {
-    name: string;
-    type: string;
-    ingredients: string[];
-    nbPersons: number;
-    intolerances?: string[];
-    instructions: string;
-  }
-  
+  name: string;
+  type: string;
+  ingredients: string[];
+  nbPersons: number;
+  intolerances?: string[];
+  instructions: string;
+  nutritionId?: string;
+}

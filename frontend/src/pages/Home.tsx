@@ -44,15 +44,22 @@ const Home = () => {
           value={query.ingredient}
           onChange={(e) => setQuery({ ...query, ingredient: e.target.value })}
         />
-        <button onClick={fetchSearch}>Rechercher</button>
-        <button onClick={fetchRecipes}>Réinitialiser</button>
+        <div className="actions">
+          <button onClick={fetchSearch}>🔍 Rechercher</button>
+          <button onClick={fetchRecipes}>🔄 Réinitialiser</button>
+        </div>
       </div>
 
       <ul className="recipes-list">
         {recipes.map((recipe) => (
           <li key={recipe.id} className="recipe-card">
             <h2>{recipe.fields.Nom}</h2>
-            <p>Type : {recipe.fields['Type de plat']}</p>
+            <p><strong>Type :</strong> {recipe.fields['Type de plat']}</p>
+            <p><strong>Nombre de personnes :</strong> {recipe.fields['Nombre de personnes']}</p>
+            <p><strong>Nb ingrédients :</strong> {recipe.fields.Ingrédients?.length || 0}</p>
+            <a href={`/recipes/${recipe.id}`}>
+              <button>Voir</button>
+            </a>
           </li>
         ))}
       </ul>

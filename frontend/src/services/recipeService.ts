@@ -40,3 +40,12 @@ export async function getAllIngredients() {
   const res = await axios.get('http://localhost:3000/ingredients');
   return res.data;
 }
+
+export const getIngredientsByIds = async (ids: string[]): Promise<string[]> => {
+  const params = new URLSearchParams({
+    filterByFormula: `OR(${ids.map(id => `RECORD_ID()='${id}'`).join(',')})`
+  });
+
+  const res = await axios.get(`http://localhost:3000/ingredients?${params.toString()}`);
+  return res.data.map((item: any) => item.fields.Nom);
+};

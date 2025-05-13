@@ -12,8 +12,8 @@ function App() {
       <main style={{ padding: '20px' }}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/recipe/:id" element={<RecipeDetail />} />
           <Route path="/create" element={<CreateRecipe />} />
+          <Route path="/recipes/:id" element={<RecipeDetail />} />
         </Routes>
       </main>
       <Footer />

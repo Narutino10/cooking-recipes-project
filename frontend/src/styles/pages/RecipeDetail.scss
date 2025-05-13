@@ -1,16 +1,39 @@
 .recipe-detail {
-    padding: 20px;
-    h1 {
-      font-size: 32px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    p {
-      font-size: 18px;
-      margin-bottom: 10px;
-      strong {
-        color: #3498db;
-      }
+  padding: 30px;
+  max-width: 700px;
+  margin: 0 auto;
+  background: #fdfdfd;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  h1 {
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 32px;
+  }
+
+  p {
+    font-size: 16px;
+    margin: 10px 0;
+  }
+
+  strong {
+    color: #333;
+  }
+
+  button {
+    margin-top: 20px;
+    padding: 10px 15px;
+    font-size: 16px;
+    background-color: #2ecc71;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+      background-color: #27ae60;
     }
   }
-  
+}

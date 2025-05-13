@@ -18,3 +18,18 @@ export const createRecipe = async (data: CreateRecipeDto): Promise<Recipe> => {
   const response = await axios.post(`${API_URL}/recipes`, data);
   return response.data;
 };
+
+export async function searchRecipes(query: {
+  name?: string;
+  type?: string;
+  ingredient?: string;
+}) {
+  const params = new URLSearchParams();
+  if (query.name) params.append('name', query.name);
+  if (query.type) params.append('type', query.type);
+  if (query.ingredient) params.append('ingredient', query.ingredient);
+
+  const res = await axios.get(`${API_URL}/recipes?${params.toString()}`);
+  return res.data;
+}
+

@@ -8,7 +8,7 @@ export class AirtableService {
   private readonly BASE_ID = 'appHJEmvm3o1OKZHc';
   //private readonly TABLE_NAME = 'Recettes';
   
-  private readonly TABLE_NAME = 'tblKk1r28rRqvfenz';
+  private readonly TABLE_NAME = 'Recettes';
   private readonly API_TOKEN =
     'patxO1XSdTTifeEsx.c525a63972ecc6e288382719cbf676296a57da92938d8c271eebbaa20baac3ab';
 
@@ -60,25 +60,33 @@ export class AirtableService {
   }
 
   async createRecipe(data: CreateRecipeDto): Promise<Recipe> {
-    const fields = {
-      Nom: data.name,
-      'Type de plat': data.type,
-      Ingrédients: data.ingredients,
-      'Nombre de personnes': data.nbPersons,
-      Intolérances: data.intolerances ?? [],
-      Instructions: data.instructions,
-      'Analyse nutritionnelle': data.nutritionId ? [data.nutritionId] : [],
-    };
+  const fields = {
+    Nom: data.name,
+    'Type de plat': data.type,
+    Ingrédients: data.ingredients, // Déjà des IDs venant du front
+    'Nombre de personnes': data.nbPersons,
+    Intolérances: data.intolerances ?? [],
+    Instructions: data.instructions,
+    'Analyse nutritionnelle': data.nutritionId ? [data.nutritionId] : [],
+  };
 
-    const url = `${this.baseUrl}/${this.TABLE_NAME}`;
-    const res: AxiosResponse<{ id: string; fields: Recipe['fields'] }> =
-      await axios.post(url, { fields }, { headers: this.headers });
+  console.log('📦 Données envoyées à Airtable :', fields);
 
-    return {
-      id: res.data.id,
-      fields: res.data.fields,
-    };
-  }
+  const url = `${this.baseUrl}/${this.TABLE_NAME}`;
+  const res = await axios.post<{ id: string; fields: Recipe['fields'] }>(
+    url,
+    { fields },
+    { headers: this.headers }
+  );
+
+  return {
+    id: res.data.id,
+    fields: res.data.fields,
+  };
+}
+
+
+
 
   async getRecipeById(id: string): Promise<Recipe> {
     const url = `${this.baseUrl}/${this.TABLE_NAME}/${id}`;

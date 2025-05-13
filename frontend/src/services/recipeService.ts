@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Recipe } from '../types/recipe.type';
-import { CreateRecipeDto } from '../types/create-recipe-dto.type'; // on va le créer juste après
+import { CreateRecipeDto } from '../types/create-recipe-dto.type';
 
 const API_URL = 'http://localhost:3000'
 
@@ -15,9 +15,21 @@ export const getRecipeById = async (id: string): Promise<Recipe> => {
 };
 
 export const createRecipe = async (data: CreateRecipeDto): Promise<Recipe> => {
-  const response = await axios.post(`${API_URL}/recipes`, data);
+  const payload = {
+    fields: {
+      Nom: data.name,
+      'Type de plat': data.type,
+      Ingrédients: data.ingredients, // tableau d’IDs
+      'Nombre de personnes': data.nbPersons,
+      Intolérances: data.intolerances,
+      Instructions: data.instructions,
+    },
+  };
+
+  const response = await axios.post(`${API_URL}/recipes`, payload);
   return response.data;
 };
+
 
 export async function searchRecipes(query: {
   name?: string;
@@ -33,3 +45,8 @@ export async function searchRecipes(query: {
   return res.data;
 }
 
+
+export async function getAllIngredients() {
+  const res = await axios.get('http://localhost:3000/ingredients');
+  return res.data;
+}

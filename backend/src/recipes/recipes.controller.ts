@@ -26,6 +26,7 @@ export class RecipesController {
 
   @Post()
   async create(@Body() createRecipeDto: CreateRecipeDto): Promise<Recipe> {
+    console.log('🧾 Reçu du frontend :', createRecipeDto); 
     return await this.airtableService.createRecipe(createRecipeDto);
   }
 

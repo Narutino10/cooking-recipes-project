@@ -1,39 +1,40 @@
 .recipe-detail {
-  padding: 30px;
-  max-width: 700px;
-  margin: 0 auto;
-  background: #fdfdfd;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 
   h1 {
     margin-bottom: 20px;
-    text-align: center;
-    font-size: 32px;
   }
 
   p {
-    font-size: 16px;
-    margin: 10px 0;
+    margin: 8px 0;
   }
 
-  strong {
-    color: #333;
+  .nutrition {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f4f4f4;
+    border-left: 4px solid #2ecc71;
+
+    h3 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      white-space: pre-line;
+    }
   }
 
   button {
-    margin-top: 20px;
-    padding: 10px 15px;
-    font-size: 16px;
-    background-color: #2ecc71;
-    border: none;
-    border-radius: 8px;
+    background-color: #3498db;
     color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    font-weight: bold;
 
     &:hover {
-      background-color: #27ae60;
+      background-color: #2980b9;
     }
   }
 }

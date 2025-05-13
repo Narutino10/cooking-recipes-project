@@ -59,41 +59,62 @@ export class AirtableService {
     return res.data.records;
   }
 
+  private async generateNutritionAnalysis(ingredientIds: string[]): Promise<string> {
+  const ingredientNames = await Promise.all(
+    ingredientIds.map(async (id) => {
+      const res = await axios.get(`https://api.airtable.com/v0/${this.BASE_ID}/Ingredients/${id}`, {
+        headers: this.headers,
+      });
+      return res.data.fields?.Nom || 'Ingrédient inconnu';
+    })
+  );
+
+  const prompt = `Voici une liste d'ingrédients : ${ingredientNames.join(', ')}. Donne-moi une analyse nutritionnelle simple (calories, protéines, lipides, glucides, vitamines, minéraux) sous forme de texte.`;
+
+  const res = await axios.post(
+    'https://api.openai.com/v1/chat/completions',
+    {
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  return res.data.choices[0].message.content;
+  }
+
   async createRecipe(data: CreateRecipeDto): Promise<Recipe> {
+  // Étape 1 : Générer une analyse nutritionnelle avec OpenAI
+  const nutrition = await this.generateNutritionAnalysis(data.ingredients);
+
+  // Étape 2 : Sauvegarder dans Airtable
   const fields = {
     Nom: data.name,
     'Type de plat': data.type,
-    Ingrédients: data.ingredients, // Déjà des IDs venant du front
+    Ingrédients: data.ingredients,
     'Nombre de personnes': data.nbPersons,
     Intolérances: data.intolerances ?? [],
     Instructions: data.instructions,
-    'Analyse nutritionnelle': data.nutritionId ? [data.nutritionId] : [],
+    'Analyse nutritionnelle': [nutrition],
   };
 
-  console.log('📦 Données envoyées à Airtable :', fields);
-
   const url = `${this.baseUrl}/${this.TABLE_NAME}`;
+  const res = await axios.post<{ id: string; fields: Recipe['fields'] }>(
+    url,
+    { fields },
+    { headers: this.headers }
+  );
 
-  try {
-    const res = await axios.post<{ id: string; fields: Recipe['fields'] }>(
-      url,
-      { fields },
-      { headers: this.headers }
-    );
-
-    return {
-      id: res.data.id,
-      fields: res.data.fields,
-    };
-  } catch (error) {
-    console.error('❌ Erreur lors de la requête Airtable :', error.response?.data || error);
-    throw error;
+  return {
+    id: res.data.id,
+    fields: res.data.fields,
+  };
   }
-  }
-
-
-
-
 
   async getRecipeById(id: string): Promise<Recipe> {
     const url = `${this.baseUrl}/${this.TABLE_NAME}/${id}`;
@@ -113,3 +134,5 @@ export class AirtableService {
     await axios.delete(url, { headers: this.headers });
   }
 }
+
+

@@ -1,0 +1,52 @@
+.intolerance-selector {
+  .intolerance-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .intolerance-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f0f0f0;
+      border-color: #ccc;
+    }
+
+    input[type="checkbox"] {
+      margin: 0;
+    }
+
+    &:has(input:checked) {
+      background-color: #e3f2fd;
+      border-color: #2196f3;
+      color: #1976d2;
+    }
+  }
+
+  .selected-intolerances {
+    margin-top: 8px;
+    font-style: italic;
+    color: #666;
+  }
+
+  .error-message {
+    color: #d32f2f;
+    font-size: 0.875rem;
+    margin-bottom: 8px;
+  }
+
+  .fallback-note {
+    color: #757575;
+    font-size: 0.8rem;
+  }
+}

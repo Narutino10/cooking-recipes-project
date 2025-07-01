@@ -1,8 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import { Recipe } from '../interfaces/recipe.interface';
 import { CreateRecipeDto } from '../recipes/create-recipe.dto';
 import { MistralService } from '../mistral/mistral.service';
+
+// Valid intolerance options in Airtable (predefined multiple select field)
+export const VALID_INTOLERANCES = ['Lactose', 'Gluten'] as const;
 
 @Injectable()
 export class AirtableService {
@@ -73,18 +76,45 @@ export class AirtableService {
       const nutritionAnalysis =
         await this.mistralService.generateNutritionAnalysis(data.ingredients);
 
-      // Traiter les ingrédients - pour l'instant on les met dans un champ texte
-      // plutôt que d'essayer de les lier à la table Ingrédients
+      // Filter intolerances to only include valid options
+      const filteredIntolerances = data.intolerances
+        ? data.intolerances.filter((intolerance) =>
+            VALID_INTOLERANCES.includes(
+              intolerance as (typeof VALID_INTOLERANCES)[number],
+            ),
+          )
+        : [];
+
+      // Log if any invalid intolerances were filtered out
+      if (
+        data.intolerances &&
+        filteredIntolerances.length !== data.intolerances.length
+      ) {
+        const invalidIntolerances = data.intolerances.filter(
+          (intolerance) =>
+            !VALID_INTOLERANCES.includes(
+              intolerance as (typeof VALID_INTOLERANCES)[number],
+            ),
+        );
+        console.warn(
+          `Invalid intolerances filtered out: ${invalidIntolerances.join(', ')}. Valid options are: ${VALID_INTOLERANCES.join(', ')}`,
+        );
+      }
+
+      // Convert ingredients array to a simple text string for now
+      // TODO: Implement proper ingredient handling (either create text field in Airtable or handle linked records)
+      const ingredientsText = data.ingredients
+        ? data.ingredients.join(', ')
+        : '';
+
+      // Traiter les ingrédients - utiliser les noms de champs corrects d'Airtable
       const fields = {
         Nom: data.name,
         'Type de plat': data.type,
-        // On stocke les ingrédients comme un texte simple pour éviter le problème de relation
-        'Liste ingrédients': data.ingredients.join('\n'),
+        // Note: Skipping ingredients for now as the field expects linked records
+        // We could add a simple text field for ingredients in Airtable as a workaround
         'Nombre de personnes': data.nbPersons,
-        Intolérances:
-          data.intolerances && data.intolerances.length > 0
-            ? data.intolerances.join(', ')
-            : '',
+        Intolérances: filteredIntolerances,
         Instructions: data.instructions,
         'Analyse nutritionnelle': [
           `Calories: ${nutritionAnalysis.calories}`,
@@ -94,7 +124,8 @@ export class AirtableService {
           `Vitamines: ${nutritionAnalysis.vitamins.join(', ')}`,
           `Minéraux: ${nutritionAnalysis.minerals.join(', ')}`,
           nutritionAnalysis.description,
-        ],
+          `\nIngrédients: ${ingredientsText}`,
+        ].join('\n'),
       };
 
       console.log(
@@ -116,6 +147,14 @@ export class AirtableService {
         'Erreur lors de la création de la recette:',
         axiosError.response?.data || (error as Error).message,
       );
+      // Provide more specific error messages
+      if (axiosError.response?.status === 422) {
+        throw new BadRequestException(
+          'Invalid data provided. Please check all fields and ensure intolerances are valid options: ' +
+            VALID_INTOLERANCES.join(', '),
+        );
+      }
+
       throw error;
     }
   }
@@ -131,6 +170,10 @@ export class AirtableService {
       id: res.data.id,
       fields: res.data.fields,
     };
+  }
+
+  getValidIntolerances(): string[] {
+    return [...VALID_INTOLERANCES];
   }
 
   async deleteRecipeById(id: string): Promise<void> {

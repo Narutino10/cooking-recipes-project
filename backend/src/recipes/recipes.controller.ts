@@ -34,6 +34,11 @@ export class RecipesController {
     return await this.airtableService.getRecipeById(id);
   }
 
+  @Get('metadata/intolerances')
+  getValidIntolerances(): string[] {
+    return this.airtableService.getValidIntolerances();
+  }
+
   @Delete(':id')
   async deleteOne(@Param('id') id: string): Promise<{ message: string }> {
     await this.airtableService.deleteRecipeById(id);

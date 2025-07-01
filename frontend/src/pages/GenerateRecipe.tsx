@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { generateRecipe } from '../services/aiService';
 import { GeneratedRecipe } from '../types/ai.type';
 import { createRecipe } from '../services/recipeService';
+import { IntoleranceSelector } from '../components/IntoleranceSelector';
 import '../styles/pages/GenerateRecipe.scss';
 
 const GenerateRecipe = () => {
   const [formData, setFormData] = useState({
     ingredients: '',
     nbPersons: 2,
-    intolerances: '',
+    intolerances: [] as string[], // Changé en tableau
     dietType: '',
     cookingTime: '',
   });
@@ -21,6 +22,10 @@ const GenerateRecipe = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleIntoleranceChange = (intolerances: string[]) => {
+    setFormData({ ...formData, intolerances });
+  };
+
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -30,7 +35,7 @@ const GenerateRecipe = () => {
       const payload = {
         ingredients: formData.ingredients.split(',').map((i) => i.trim()),
         nbPersons: Number(formData.nbPersons),
-        intolerances: formData.intolerances ? formData.intolerances.split(',').map((i) => i.trim()) : [],
+        intolerances: formData.intolerances, // Déjà un tableau
         dietType: formData.dietType || undefined,
         cookingTime: formData.cookingTime ? Number(formData.cookingTime) : undefined,
       };
@@ -54,7 +59,7 @@ const GenerateRecipe = () => {
         type: generatedRecipe.type,
         ingredients: generatedRecipe.ingredients,
         nbPersons: formData.nbPersons,
-        intolerances: formData.intolerances ? formData.intolerances.split(',').map((i) => i.trim()) : [],
+        intolerances: formData.intolerances, // Déjà un tableau
         instructions: generatedRecipe.instructions,
       };
 
@@ -64,7 +69,7 @@ const GenerateRecipe = () => {
       setFormData({
         ingredients: '',
         nbPersons: 2,
-        intolerances: '',
+        intolerances: [], // Tableau vide
         dietType: '',
         cookingTime: '',
       });
@@ -106,12 +111,10 @@ const GenerateRecipe = () => {
 
         <div className="form-group">
           <label>Intolérances alimentaires (optionnel) :</label>
-          <input
-            type="text"
-            name="intolerances"
-            value={formData.intolerances}
-            onChange={handleChange}
-            placeholder="ex: lactose, gluten"
+          <IntoleranceSelector
+            selectedIntolerances={formData.intolerances}
+            onChange={handleIntoleranceChange}
+            className="intolerance-selector"
           />
         </div>
 

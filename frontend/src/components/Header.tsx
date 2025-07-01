@@ -10,6 +10,7 @@ const Header = () => {
       <nav className="nav-links">
         <Link to="/">Accueil</Link>
         <Link to="/create">Ajouter une recette</Link>
+        <Link to="/generate">Générer avec IA</Link>
       </nav>
     </header>
   );

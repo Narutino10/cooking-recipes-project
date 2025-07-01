@@ -1,16 +1,48 @@
 .recipe-detail {
-    padding: 20px;
-    h1 {
-      font-size: 32px;
-      margin-bottom: 20px;
-      text-align: center;
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  
+  h1 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #2c3e50;
+  }
+  
+  p {
+    font-size: 18px;
+    margin-bottom: 15px;
+    line-height: 1.6;
+    
+    strong {
+      color: #3498db;
     }
-    p {
-      font-size: 18px;
-      margin-bottom: 10px;
-      strong {
-        color: #3498db;
+  }
+
+  .nutrition-analysis {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border-left: 4px solid #27ae60;
+
+    h3 {
+      color: #27ae60;
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+
+    .nutrition-content {
+      p {
+        background: white;
+        padding: 10px;
+        margin: 8px 0;
+        border-radius: 5px;
+        border-left: 3px solid #3498db;
+        font-size: 16px;
       }
     }
   }
+}
   

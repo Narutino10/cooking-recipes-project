@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
 import { Recipe } from '../interfaces/recipe.interface';
 import { CreateRecipeDto } from '../recipes/create-recipe.dto';
+import { MistralService } from '../mistral/mistral.service';
 
 @Injectable()
 export class AirtableService {
-  private readonly BASE_ID = 'appHJEmvm3o1OKZHc';
-  private readonly TABLE_NAME = 'Recettes';
-  private readonly API_TOKEN =
+  private readonly BASE_ID = process.env.AIRTABLE_BASE_ID || 'appHJEmvm3o1OKZHc';
+  private readonly TABLE_NAME = process.env.AIRTABLE_RECIPES_TABLE_NAME || 'Recettes';
+  private readonly API_TOKEN = process.env.AIRTABLE_TOKEN ||
     'patxO1XSdTTifeEsx.c525a63972ecc6e288382719cbf676296a57da92938d8c271eebbaa20baac3ab';
 
   private readonly baseUrl = `https://api.airtable.com/v0/${this.BASE_ID}`;
@@ -15,6 +16,8 @@ export class AirtableService {
     Authorization: `Bearer ${this.API_TOKEN}`,
     'Content-Type': 'application/json',
   };
+
+  constructor(private readonly mistralService: MistralService) {}
 
   async getAllRecipes(): Promise<Recipe[]> {
     const url = `${this.baseUrl}/${this.TABLE_NAME}`;
@@ -58,6 +61,9 @@ export class AirtableService {
   }
 
   async createRecipe(data: CreateRecipeDto): Promise<Recipe> {
+    // Générer l'analyse nutritionnelle avec Mistral
+    const nutritionAnalysis = await this.mistralService.generateNutritionAnalysis(data.ingredients);
+    
     const fields = {
       Nom: data.name,
       'Type de plat': data.type,
@@ -65,7 +71,15 @@ export class AirtableService {
       'Nombre de personnes': data.nbPersons,
       Intolérances: data.intolerances ?? [],
       Instructions: data.instructions,
-      'Analyse nutritionnelle': data.nutritionId ? [data.nutritionId] : [],
+      'Analyse nutritionnelle': [
+        `Calories: ${nutritionAnalysis.calories}`,
+        `Protéines: ${nutritionAnalysis.proteins}g`,
+        `Glucides: ${nutritionAnalysis.carbohydrates}g`,
+        `Lipides: ${nutritionAnalysis.fats}g`,
+        `Vitamines: ${nutritionAnalysis.vitamins.join(', ')}`,
+        `Minéraux: ${nutritionAnalysis.minerals.join(', ')}`,
+        nutritionAnalysis.description,
+      ],
     };
 
     const url = `${this.baseUrl}/${this.TABLE_NAME}`;

@@ -1,0 +1,241 @@
+import { Injectable } from '@nestjs/common';
+import { Mistral } from '@mistralai/mistralai';
+
+export interface NutritionAnalysis {
+  calories: number;
+  proteins: number;
+  carbohydrates: number;
+  fats: number;
+  vitamins: string[];
+  minerals: string[];
+  description: string;
+}
+
+export interface GenerateRecipeRequest {
+  ingredients: string[];
+  nbPersons: number;
+  intolerances?: string[];
+  dietType?: string;
+  cookingTime?: number;
+}
+
+export interface GeneratedRecipe {
+  name: string;
+  type: string;
+  ingredients: string[];
+  instructions: string;
+  nutritionAnalysis: NutritionAnalysis;
+}
+
+@Injectable()
+export class MistralService {
+  private client: Mistral;
+
+  constructor() {
+    if (!process.env.MISTRAL_API_KEY) {
+      console.warn('MISTRAL_API_KEY not found, using mock responses');
+    }
+    
+    this.client = new Mistral({
+      apiKey: process.env.MISTRAL_API_KEY || 'mock-key',
+    });
+  }
+
+  async generateNutritionAnalysis(
+    ingredients: string[],
+  ): Promise<NutritionAnalysis> {
+    // Mode de développement : retourner des données mockées si pas de clé API
+    if (!process.env.MISTRAL_API_KEY) {
+      return this.getMockNutritionAnalysis(ingredients);
+    }
+
+    const prompt = `En tant que nutritionniste expert, analysez les ingrédients suivants et fournissez une analyse nutritionnelle détaillée :
+
+Ingrédients : ${ingredients.join(', ')}
+
+Répondez au format JSON suivant :
+{
+  "calories": nombre estimé de calories total,
+  "proteins": grammes de protéines,
+  "carbohydrates": grammes de glucides,
+  "fats": grammes de lipides,
+  "vitamins": ["liste des vitamines principales"],
+  "minerals": ["liste des minéraux principaux"],
+  "description": "description narrative de l'analyse nutritionnelle"
+}
+
+Soyez précis et réaliste dans vos estimations.`;
+
+    try {
+      const response = await this.client.chat.complete({
+        model: 'mistral-large-latest',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.3,
+      });
+
+      const content = response.choices[0].message.content;
+      const jsonMatch = content?.match(/\{[\s\S]*\}/);
+      
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]) as NutritionAnalysis;
+      } else {
+        throw new Error('Format de réponse invalide');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'analyse nutritionnelle:', error);
+      // Retourner une analyse par défaut en cas d'erreur
+      return this.getMockNutritionAnalysis(ingredients);
+    }
+  }
+
+  private getMockNutritionAnalysis(ingredients: string[]): NutritionAnalysis {
+    return {
+      calories: 350,
+      proteins: 15,
+      carbohydrates: 45,
+      fats: 12,
+      vitamins: ['A', 'C', 'B6'],
+      minerals: ['Fer', 'Calcium', 'Magnésium'],
+      description: `Analyse nutritionnelle estimée pour: ${ingredients.join(', ')}. Cette recette apporte un bon équilibre de macronutriments.`,
+    };
+  }
+
+  async generateRecipe(
+    request: GenerateRecipeRequest,
+  ): Promise<GeneratedRecipe> {
+    const {
+      ingredients,
+      nbPersons,
+      intolerances = [],
+      dietType,
+      cookingTime,
+    } = request;
+    
+    // Mode de développement : retourner des données mockées si pas de clé API
+    if (!process.env.MISTRAL_API_KEY) {
+      return this.getMockRecipe(request);
+    }
+    
+    const intoleranceText =
+      intolerances.length > 0
+        ? `Intolérances à éviter : ${intolerances.join(', ')}`
+        : '';
+    
+    const dietText = dietType ? `Type de régime : ${dietType}` : '';
+    const timeText = cookingTime
+      ? `Temps de cuisson souhaité : ${cookingTime} minutes`
+      : '';
+
+    const prompt = `En tant que chef cuisinier expert, créez une recette originale avec les contraintes suivantes :
+
+Ingrédients disponibles : ${ingredients.join(', ')}
+Nombre de personnes : ${nbPersons}
+${intoleranceText}
+${dietText}
+${timeText}
+
+Créez une recette complète et répondez au format JSON suivant :
+{
+  "name": "nom de la recette",
+  "type": "type de plat (entrée, plat principal, dessert, etc.)",
+  "ingredients": ["liste détaillée des ingrédients avec quantités"],
+  "instructions": "instructions de préparation étape par étape, séparées par des numéros ou tirets"
+}
+
+Soyez créatif tout en respectant les contraintes données. La recette doit être réalisable et délicieuse.`;
+
+    try {
+      const response = await this.client.chat.complete({
+        model: 'mistral-large-latest',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+      });
+
+      const content = response.choices[0].message.content;
+      const jsonMatch = content?.match(/\{[\s\S]*\}/);
+      
+      if (jsonMatch) {
+        const recipeData = JSON.parse(jsonMatch[0]) as Omit<
+          GeneratedRecipe,
+          'nutritionAnalysis'
+        >;
+        
+        // Générer l'analyse nutritionnelle pour la recette
+        const nutritionAnalysis = await this.generateNutritionAnalysis(
+          recipeData.ingredients,
+        );
+        
+        return {
+          ...recipeData,
+          nutritionAnalysis,
+        };
+      } else {
+        throw new Error('Format de réponse invalide');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la génération de recette:', error);
+      return this.getMockRecipe(request);
+    }
+  }
+
+  private getMockRecipe(request: GenerateRecipeRequest): GeneratedRecipe {
+    const { ingredients, nbPersons } = request;
+    return {
+      name: `Recette aux ${ingredients[0] || 'ingrédients'}`,
+      type: 'Plat principal',
+      ingredients: [
+        `${ingredients[0] || 'Ingrédient principal'} - 200g`,
+        `${ingredients[1] || 'Ingrédient secondaire'} - 150g`,
+        'Huile d\'olive - 2 cuillères à soupe',
+        'Sel et poivre - selon le goût',
+      ],
+      instructions: `1. Préparer tous les ingrédients\n2. Faire chauffer l'huile dans une poêle\n3. Cuire les ingrédients pendant 10-15 minutes\n4. Assaisonner avec sel et poivre\n5. Servir chaud pour ${nbPersons} personne(s)`,
+      nutritionAnalysis: this.getMockNutritionAnalysis(ingredients),
+    };
+  }
+
+  async improveRecipe(
+    recipeName: string,
+    currentIngredients: string[],
+    improvements: string,
+  ): Promise<string> {
+    // Mode de développement : retourner une suggestion mockée si pas de clé API
+    if (!process.env.MISTRAL_API_KEY) {
+      return `Suggestions d'amélioration pour "${recipeName}": ${improvements}. Vous pourriez ajouter des herbes fraîches ou ajuster les assaisonnements selon vos goûts.`;
+    }
+
+    const prompt = `En tant que chef expert, améliorez la recette "${recipeName}" avec les ingrédients actuels : ${currentIngredients.join(', ')}.
+
+Améliorations demandées : ${improvements}
+
+Fournissez des suggestions concrètes d'amélioration sous forme de texte clair et structuré.`;
+
+    try {
+      const response = await this.client.chat.complete({
+        model: 'mistral-large-latest',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.6,
+      });
+
+      return response.choices[0].message.content || 'Aucune suggestion disponible';
+    } catch (error) {
+      console.error('Erreur lors de l\'amélioration de recette:', error);
+      return `Suggestions d'amélioration pour "${recipeName}": ${improvements}. Vous pourriez ajouter des herbes fraîches ou ajuster les assaisonnements selon vos goûts.`;
+    }
+  }
+}

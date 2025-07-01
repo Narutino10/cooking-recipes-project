@@ -29,6 +29,21 @@ const RecipeDetail = () => {
       <p><strong>Nombre de personnes :</strong> {recipe.fields['Nombre de personnes']}</p>
       <p><strong>Instructions :</strong> {recipe.fields.Instructions}</p>
       <p><strong>Ingrédients :</strong> {recipe.fields.Ingrédients.join(', ')}</p>
+      
+      {recipe.fields['Analyse nutritionnelle'] && recipe.fields['Analyse nutritionnelle'].length > 0 && (
+        <div className="nutrition-analysis">
+          <h3>Analyse nutritionnelle</h3>
+          <div className="nutrition-content">
+            {recipe.fields['Analyse nutritionnelle'].map((item, index) => (
+              <p key={index}>{item}</p>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {recipe.fields.Intolérances && recipe.fields.Intolérances.length > 0 && (
+        <p><strong>Intolérances :</strong> {recipe.fields.Intolérances.join(', ')}</p>
+      )}
     </div>
   );
 };

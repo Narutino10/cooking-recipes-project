@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllRecipes } from '../services/recipeService';
 import { Recipe } from '../types/recipe.type';
+import { getIngredientsFromRecipe, formatIngredientsForSearch } from '../utils/recipeUtils';
 import '../styles/pages/Home.scss'; 
 
 const Home = () => {
@@ -24,12 +25,16 @@ const Home = () => {
       setFilteredRecipes(recipes);
     } else {
       const filtered = recipes.filter(
-        (recipe) =>
-          recipe.fields.Nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          recipe.fields['Type de plat'].toLowerCase().includes(searchTerm.toLowerCase()) ||
-          recipe.fields.Ingrédients.some((ingredient) =>
-            ingredient.toLowerCase().includes(searchTerm.toLowerCase())
-          )
+        (recipe) => {
+          const ingredients = getIngredientsFromRecipe(recipe);
+          const ingredientsText = formatIngredientsForSearch(ingredients);
+          
+          return (
+            recipe.fields.Nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            recipe.fields['Type de plat'].toLowerCase().includes(searchTerm.toLowerCase()) ||
+            ingredientsText.includes(searchTerm.toLowerCase())
+          );
+        }
       );
       setFilteredRecipes(filtered);
     }

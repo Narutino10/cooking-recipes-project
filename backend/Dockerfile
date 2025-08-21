@@ -8,14 +8,14 @@ COPY package*.json ./
 
 # Development stage
 FROM base AS development
-RUN npm ci
+RUN npm install --legacy-peer-deps
 COPY . .
 EXPOSE 3001
 CMD ["npm", "run", "start:dev"]
 
 # Build stage  
 FROM base AS build
-RUN npm ci
+RUN npm install --legacy-peer-deps
 COPY . .
 RUN npm run build
 

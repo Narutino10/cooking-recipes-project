@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  database:
+    image: postgres:16-alpine
+    container_name: cooking-recipes-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-cooking_recipes}
+      POSTGRES_USER: ${DATABASE_USERNAME:-cooking_user}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-cooking_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - cooking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-cooking_user} -d ${DATABASE_NAME:-cooking_recipes}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend NestJS (Development)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: cooking-recipes-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+      DATABASE_HOST: database
+    ports:
+      - "3001:3001"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - cooking-network
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # Adminer pour gérer la base de données
+  adminer:
+    image: adminer
+    container_name: cooking-recipes-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+    networks:
+      - cooking-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  cooking-network:
+    driver: bridge

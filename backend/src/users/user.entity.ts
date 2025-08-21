@@ -28,14 +28,14 @@ export class User {
   @Column({ default: false })
   isEmailConfirmed: boolean;
 
-  @Column({ nullable: true, type: 'varchar' })
+  @Column({ nullable: true, type: 'varchar', length: 255 })
   emailConfirmationToken: string | null;
 
-  @Column({ nullable: true, type: 'varchar' })
+  @Column({ nullable: true, type: 'varchar', length: 255 })
   passwordResetToken: string | null;
 
   @Column({ nullable: true, type: 'timestamp' })
-  passwordResetExpires: Date;
+  passwordResetExpires: Date | null;
 
   @OneToMany(() => Recipes, (recipe) => recipe.author)
   recipes: Recipes[];

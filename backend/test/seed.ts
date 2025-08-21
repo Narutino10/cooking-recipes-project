@@ -45,8 +45,15 @@ async function seed() {
     }
     console.log('✅ Seed terminé');
   } catch (error) {
-    console.error('❌ Erreur lors du seed :', error.response?.data || error);
+    if (axios.isAxiosError(error)) {
+      console.error(
+        '❌ Erreur lors du seed :',
+        error.response?.data || error.message,
+      );
+    } else {
+      console.error('❌ Erreur lors du seed :', error);
+    }
   }
 }
 
-seed();
+void seed();

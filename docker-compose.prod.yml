@@ -48,6 +48,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: production
     container_name: cooking-recipes-frontend-prod
     restart: unless-stopped
     ports:

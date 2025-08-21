@@ -46,6 +46,26 @@ services:
       - ./backend:/usr/src/app
       - /usr/src/app/node_modules
 
+  # Frontend React (Development)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: cooking-recipes-frontend
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - cooking-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
   # Adminer pour gérer la base de données
   adminer:
     image: adminer

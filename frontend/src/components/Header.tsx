@@ -57,13 +57,13 @@ const Header = () => {
                 <span className="nav-icon">➕</span>
                 Créer une recette
               </Link>
-              <Link to="/generate-recipe" className="nav-link">
+              <Link to="/generate" className="nav-link">
                 <span className="nav-icon">🤖</span>
                 Générer avec IA
               </Link>
             </>
           ) : (
-            <Link to="/generate-recipe" className="nav-link">
+            <Link to="/generate" className="nav-link">
               <span className="nav-icon">🤖</span>
               Générer avec IA
             </Link>

@@ -15,11 +15,22 @@ async function bootstrap() {
     }),
   );
 
+  // Allow configuring the frontend origin via env, fallback to localhost:3000
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   app.enableCors({
-    origin: 'http://localhost:3001', // frontend
+    origin: frontendUrl,
     credentials: true,
   });
 
-  await app.listen(3000);
+  // Listen on the port provided by env (used by docker-compose) or default to 3001
+  const port = parseInt(
+    process.env.PORT || process.env.BACKEND_PORT || '3001',
+    10,
+  );
+  // Bind to 0.0.0.0 so the server is reachable from outside the container
+  await app.listen(port, '0.0.0.0');
+  // Helpful log to verify the effective URL in container logs
+  console.log(`Nest application listening on: ${await app.getUrl()}`);
 }
+
 void bootstrap();

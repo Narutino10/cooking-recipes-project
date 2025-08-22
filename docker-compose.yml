@@ -53,6 +53,8 @@ services:
     container_name: cooking-recipes-frontend
     restart: unless-stopped
     environment:
+      # For the client bundle served to the browser, use the host address
+      # so the browser can reach the backend at http://localhost:3001
       REACT_APP_API_URL: http://localhost:3001
     ports:
       - "3000:3000"

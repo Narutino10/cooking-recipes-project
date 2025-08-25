@@ -8,20 +8,29 @@ import '../styles/pages/RecipeDetail.scss';
 const RecipeDetail = () => {
   const { id } = useParams();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRecipe = async () => {
-      if (id) {
+      if (!id) return;
+      setLoading(true);
+      setError(null);
+      try {
         const data = await getRecipeById(id);
         setRecipe(data);
+      } catch (err: any) {
+        setError(err?.message ?? 'Erreur lors du chargement de la recette');
+      } finally {
+        setLoading(false);
       }
     };
     fetchRecipe();
   }, [id]);
 
-  if (!recipe) {
-    return <div>Chargement...</div>;
-  }
+  if (loading) return <div>Chargement...</div>;
+  if (error) return <div className="error">{error}</div>;
+  if (!recipe) return <div>Recette introuvable.</div>;
 
   const ingredients = getIngredientsFromRecipe(recipe);
   const intolerances = getIntolerancesFromRecipe(recipe);
@@ -88,10 +97,10 @@ const RecipeDetail = () => {
             const maybeImage = recipe.fields?.Image ?? (recipe.fields as any)?.imageUrl ?? null;
             if (Array.isArray(maybeImage) && maybeImage.length > 0) {
               const url = maybeImage[0]?.url ?? maybeImage[0]?.thumbnails?.large?.url ?? null;
-              if (url) return <img src={url} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
+              if (url) return <img loading="lazy" src={url} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
             }
             if (typeof maybeImage === 'string' && maybeImage.trim() !== '') {
-              return <img src={maybeImage} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
+              return <img loading="lazy" src={maybeImage} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
             }
             // placeholder
             return (

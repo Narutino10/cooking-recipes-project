@@ -49,8 +49,9 @@ export interface RecipesResponse {
 
 // Services existants (Airtable)
 export const getAllRecipes = async (): Promise<Recipe[]> => {
-  const response = await axios.get(`${API_URL}/recipes`);
-  const data = response.data;
+  try {
+    const response = await api.get('/recipes');
+    const data = response.data;
   // Support both legacy Airtable (array) and new backend ({ recipes, total }) shapes
   const normalize = (raw: any): Recipe => {
     if (raw && raw.fields) return raw as Recipe;
@@ -85,15 +86,20 @@ export const getAllRecipes = async (): Promise<Recipe[]> => {
     return { id: raw.id ?? raw._id ?? '', fields };
   };
 
-  if (Array.isArray(data)) return data.map(normalize);
-  if (data && Array.isArray(data.recipes)) return data.recipes.map(normalize);
-  return [];
+    if (Array.isArray(data)) return data.map(normalize);
+    if (data && Array.isArray(data.recipes)) return data.recipes.map(normalize);
+    return [];
+  } catch (err) {
+    console.error('getAllRecipes error', err);
+    return [];
+  }
 };
 
-export const getRecipeById = async (id: string): Promise<Recipe> => {
-  const response = await axios.get(`${API_URL}/recipes/${id}`);
-  const raw = response.data;
-  if (raw && raw.fields) return raw as Recipe;
+export const getRecipeById = async (id: string): Promise<Recipe | null> => {
+  try {
+    const response = await api.get(`/recipes/${id}`);
+    const raw = response.data;
+    if (raw && raw.fields) return raw as Recipe;
   const fields: any = {
     Nom: raw.name ?? raw.title ?? '',
     'Type de plat': raw.type ?? '',
@@ -117,7 +123,11 @@ export const getRecipeById = async (id: string): Promise<Recipe> => {
       });
     }
   }
-  return { id: raw.id ?? raw._id ?? id, fields };
+    return { id: raw.id ?? raw._id ?? id, fields };
+  } catch (err) {
+    console.error('getRecipeById error', err);
+    return null;
+  }
 };
 
 export const createRecipe = async (data: CreateRecipeDto): Promise<Recipe> => {

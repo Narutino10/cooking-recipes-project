@@ -5,18 +5,49 @@ import { Transporter } from 'nodemailer';
 
 @Injectable()
 export class EmailService {
-  private transporter: Transporter;
+  private transporter: Transporter | null;
 
   constructor(private configService: ConfigService) {
-    this.transporter = nodemailer.createTransport({
-      host: this.configService.get<string>('EMAIL_HOST'),
-      port: this.configService.get<number>('EMAIL_PORT'),
-      secure: this.configService.get<string>('EMAIL_SECURE') === 'true',
-      auth: {
-        user: this.configService.get<string>('EMAIL_USER'),
-        pass: this.configService.get<string>('EMAIL_PASS'),
-      },
-    });
+    // Support both EMAIL_* and SMTP_* env var names
+    const host =
+      this.configService.get<string>('EMAIL_HOST') ||
+      this.configService.get<string>('SMTP_HOST');
+    const port =
+      Number(
+        this.configService.get<string>('EMAIL_PORT') ||
+          this.configService.get<string>('SMTP_PORT'),
+      ) || undefined;
+    const secure =
+      (this.configService.get<string>('EMAIL_SECURE') ||
+        this.configService.get<string>('SMTP_SECURE') ||
+        'false') === 'true';
+    const user =
+      this.configService.get<string>('EMAIL_USER') ||
+      this.configService.get<string>('SMTP_USER');
+    const pass =
+      this.configService.get<string>('EMAIL_PASS') ||
+      this.configService.get<string>('SMTP_PASS');
+
+    // If host is not provided or points to localhost, don't create a real transporter in dev
+    if (!host || host === 'localhost' || host === '127.0.0.1') {
+      console.warn(
+        'Email transporter not configured or using localhost. Emails will be logged instead of sent.',
+      );
+      this.transporter = null;
+    } else {
+      // Build SMTP transport options. Type as any to avoid mismatches between
+      // nodemailer vs @types/nodemailer definitions across versions.
+      const smtpOptions = {
+        host,
+        ...(port ? { port } : {}),
+        // secure indicates whether to use TLS
+        ...(typeof secure === 'boolean' ? { secure } : {}),
+        ...(user && pass ? { auth: { user, pass } } : {}),
+      };
+      this.transporter = nodemailer.createTransport(
+        smtpOptions as nodemailer.TransportOptions,
+      );
+    }
   }
 
   async sendConfirmationEmail(
@@ -47,10 +78,22 @@ export class EmailService {
     };
 
     try {
+      if (!this.transporter) {
+        // In development when no SMTP is configured, just log the mail content instead of throwing
+        console.log(
+          'Skipping email send (transporter not configured). Mail content:',
+          mailOptions,
+        );
+        return;
+      }
       await this.transporter.sendMail(mailOptions);
     } catch (error) {
       console.error('Error sending confirmation email:', error);
-      throw new Error('Failed to send confirmation email');
+      // Don't fail the whole request in development; rethrow in production
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Failed to send confirmation email');
+      }
+      return;
     }
   }
 
@@ -83,10 +126,20 @@ export class EmailService {
     };
 
     try {
+      if (!this.transporter) {
+        console.log(
+          'Skipping password reset email send (transporter not configured). Mail content:',
+          mailOptions,
+        );
+        return;
+      }
       await this.transporter.sendMail(mailOptions);
     } catch (error) {
       console.error('Error sending password reset email:', error);
-      throw new Error('Failed to send password reset email');
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Failed to send password reset email');
+      }
+      return;
     }
   }
 }

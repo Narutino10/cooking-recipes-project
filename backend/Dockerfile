@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for development and production
-FROM node:20-alpine AS base
+FROM node:20.11-alpine3.19 AS base
 
 WORKDIR /usr/src/app
 
@@ -20,7 +20,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:20.11-alpine3.19 AS production
 WORKDIR /usr/src/app
 
 # Copy package files and install only production dependencies

@@ -50,7 +50,12 @@ export interface RecipesResponse {
 // Services existants (Airtable)
 export const getAllRecipes = async (): Promise<Recipe[]> => {
   const response = await axios.get(`${API_URL}/recipes`);
-  return response.data;
+  const data = response.data;
+  // Support both legacy Airtable (array) and new backend ({ recipes, total }) shapes
+  if (Array.isArray(data)) return data as Recipe[];
+  if (data && Array.isArray(data.recipes)) return data.recipes as Recipe[];
+  // Fallback to empty array to prevent runtime errors in components
+  return [];
 };
 
 export const getRecipeById = async (id: string): Promise<Recipe> => {

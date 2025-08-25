@@ -22,15 +22,19 @@ const ConfirmEmail = () => {
       try {
         const response = await confirmEmail(token);
         setStatus('success');
-        setMessage(response.message);
-        
+        // Fallback si le backend ne renvoie pas de message
+        setMessage(response?.message || 'Email confirmé avec succès.');
+
         // Rediriger vers la page de connexion après 3 secondes
         setTimeout(() => {
           navigate('/login');
         }, 3000);
       } catch (error: any) {
+        console.error('Confirm email error:', error);
         setStatus('error');
-        setMessage(error.response?.data?.message || 'Erreur lors de la confirmation de l\'email.');
+        const serverMessage = error?.response?.data?.message;
+        const fallback = error?.message || 'Erreur lors de la confirmation de l\'email.';
+        setMessage(serverMessage || fallback);
       }
     };
 

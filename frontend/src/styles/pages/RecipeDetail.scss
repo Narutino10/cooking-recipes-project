@@ -9,6 +9,24 @@
     text-align: center;
     color: #2c3e50;
   }
+
+  .recipe-header {
+    margin-bottom: 20px;
+    text-align: center;
+    .recipe-meta {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      .meta-item { color: #2c3e50; }
+      .badge { padding: 6px 10px; border-radius: 12px; background: #f0f4f8; color: #333; font-weight: 600; }
+      .badge.difficulty { background: #ffe8a3; }
+      .badge.tag { background: #e8f4ff; }
+      .tags { display:flex; gap:6px; }
+    }
+  }
   
   p {
     font-size: 18px;
@@ -19,6 +37,15 @@
       color: #3498db;
     }
   }
+
+  .recipe-body {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* content and aside styled via parent grid */
 
   .nutrition-analysis {
     background: #f8f9fa;
@@ -43,6 +70,41 @@
         font-size: 16px;
       }
     }
+  }
+
+  .recipe-image {
+    display: block;
+    max-width: 100%;
+    max-height: 500px;
+    width: auto;
+    height: auto;
+    margin: 1.5rem auto;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .recipe-image.placeholder {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    height:200px;
+    background:#fafafa;
+    border-radius:8px;
+    color:#777;
+    .placeholder-icon{ font-size:36px; }
+    .placeholder-text{ margin-top:8px; }
+  }
+
+  .section { margin-bottom: 18px; }
+  .section h3 { font-size:18px; color:#2c3e50; margin-bottom:10px; }
+  .section ul { padding-left:18px; }
+  .intolerances { color:#c0392b; font-weight:600; }
+
+  @media (max-width: 880px) {
+    .recipe-body { grid-template-columns: 1fr; }
+    .recipe-aside { order: -1; }
   }
 }
   

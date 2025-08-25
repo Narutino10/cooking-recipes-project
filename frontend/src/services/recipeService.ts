@@ -52,15 +52,71 @@ export const getAllRecipes = async (): Promise<Recipe[]> => {
   const response = await axios.get(`${API_URL}/recipes`);
   const data = response.data;
   // Support both legacy Airtable (array) and new backend ({ recipes, total }) shapes
-  if (Array.isArray(data)) return data as Recipe[];
-  if (data && Array.isArray(data.recipes)) return data.recipes as Recipe[];
-  // Fallback to empty array to prevent runtime errors in components
+  const normalize = (raw: any): Recipe => {
+    if (raw && raw.fields) return raw as Recipe;
+    // backend shape -> { id, name, ingredients, servings, instructions, imageUrl, intolerances, nutrition }
+    const fields: any = {
+      Nom: raw.name ?? raw.title ?? '',
+      'Type de plat': raw.type ?? '',
+      Ingrédients: Array.isArray(raw.ingredients) ? raw.ingredients : (raw.ingredients ? String(raw.ingredients).split(',').map((s: string) => s.trim()) : []),
+      'Nombre de personnes': raw.servings ?? raw.nbPersons ?? 1,
+      Instructions: raw.instructions ?? raw.description ?? '',
+      Intolérances: raw.intolerances ?? raw.intolerance ?? [],
+      'Analyse nutritionnelle': raw.nutrition ?? raw['Analyse nutritionnelle'] ?? [],
+    };
+    // image handling: keep Airtable-like Image array if possible
+    if (raw.imageUrl) {
+      const img = String(raw.imageUrl);
+      fields.Image = img.startsWith('/') ? `${API_URL}${img}` : img;
+    } else if (raw.image) {
+      // could be array or string
+      if (Array.isArray(raw.image)) {
+        // normalize array urls
+        fields.Image = raw.image.map((it: any) => {
+          const u = (it && it.url) ? it.url : String(it);
+          return typeof u === 'string' && u.startsWith('/') ? `${API_URL}${u}` : u;
+        });
+      } else {
+        const img = String(raw.image);
+        fields.Image = img.startsWith('/') ? `${API_URL}${img}` : img;
+      }
+    }
+    return { id: raw.id ?? raw._id ?? '', fields };
+  };
+
+  if (Array.isArray(data)) return data.map(normalize);
+  if (data && Array.isArray(data.recipes)) return data.recipes.map(normalize);
   return [];
 };
 
 export const getRecipeById = async (id: string): Promise<Recipe> => {
   const response = await axios.get(`${API_URL}/recipes/${id}`);
-  return response.data;
+  const raw = response.data;
+  if (raw && raw.fields) return raw as Recipe;
+  const fields: any = {
+    Nom: raw.name ?? raw.title ?? '',
+    'Type de plat': raw.type ?? '',
+    Ingrédients: Array.isArray(raw.ingredients) ? raw.ingredients : (raw.ingredients ? String(raw.ingredients).split(',').map((s: string) => s.trim()) : []),
+    'Nombre de personnes': raw.servings ?? raw.nbPersons ?? 1,
+    Instructions: raw.instructions ?? raw.description ?? '',
+    Intolérances: raw.intolerances ?? raw.intolerance ?? [],
+    'Analyse nutritionnelle': raw.nutrition ?? raw['Analyse nutritionnelle'] ?? [],
+  };
+  if (raw.imageUrl) fields.Image = raw.imageUrl;
+  else if (raw.image) fields.Image = raw.image;
+  // ensure relative urls are prefixed with API_URL
+  if (fields.Image) {
+    if (typeof fields.Image === 'string' && fields.Image.startsWith('/')) {
+      fields.Image = `${API_URL}${fields.Image}`;
+    }
+    if (Array.isArray(fields.Image)) {
+      fields.Image = fields.Image.map((it: any) => {
+        const u = (it && it.url) ? it.url : it;
+        return (typeof u === 'string' && u.startsWith('/')) ? `${API_URL}${u}` : u;
+      });
+    }
+  }
+  return { id: raw.id ?? raw._id ?? id, fields };
 };
 
 export const createRecipe = async (data: CreateRecipeDto): Promise<Recipe> => {

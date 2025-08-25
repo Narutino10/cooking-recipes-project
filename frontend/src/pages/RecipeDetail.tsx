@@ -28,45 +28,87 @@ const RecipeDetail = () => {
 
   return (
     <div className="recipe-detail">
-      <h1>{recipe.fields?.Nom ?? 'Recette'}</h1>
-      <p><strong>Type :</strong> {recipe.fields?.['Type de plat'] ?? '—'}</p>
-      <p><strong>Nombre de personnes :</strong> {recipe.fields?.['Nombre de personnes'] ?? 1}</p>
-      <p><strong>Instructions :</strong> {recipe.fields?.Instructions ?? ''}</p>
-      <p><strong>Ingrédients :</strong> {ingredients.join(', ')}</p>
-
-      {/* Image display: support 'Image' (Airtable-style) or 'imageUrl' */}
-      {(() => {
-  const maybeImage = recipe.fields?.Image ?? (recipe.fields as any)?.imageUrl ?? null;
-        if (!maybeImage) return null;
-
-        // If Airtable Image object or array
-        if (Array.isArray(maybeImage) && maybeImage.length > 0) {
-          const url = maybeImage[0]?.url ?? maybeImage[0]?.thumbnails?.large?.url;
-          return url ? <img src={url} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" /> : null;
-        }
-
-        // If string URL
-        if (typeof maybeImage === 'string') {
-          return <img src={maybeImage} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
-        }
-
-        return null;
-      })()}
-
-      {recipe.fields?.['Analyse nutritionnelle'] && recipe.fields['Analyse nutritionnelle'].length > 0 && (
-        <div className="nutrition-analysis">
-          <h3>Analyse nutritionnelle</h3>
-          <div className="nutrition-content">
-            {recipe.fields['Analyse nutritionnelle'].map((item, index) => (
-              <p key={index}>{item}</p>
-            ))}
-          </div>
+      <div className="recipe-header">
+        <h1>{recipe.fields?.Nom ?? 'Recette'}</h1>
+        <div className="recipe-meta">
+          <span className="meta-item"><strong>Type :</strong> {recipe.fields?.['Type de plat'] ?? '—'}</span>
+          <span className="meta-item"><strong>Pour :</strong> {recipe.fields?.['Nombre de personnes'] ?? 1} pers.</span>
+          {((recipe.fields as any)?.difficulty) && (
+            <span className="badge difficulty">{(recipe.fields as any).difficulty}</span>
+          )}
+          {Array.isArray((recipe.fields as any).tags) && (recipe.fields as any).tags.length > 0 && (
+            <div className="tags">{(recipe.fields as any).tags.map((t: string, i: number) => <span key={i} className="badge tag">{t}</span>)}</div>
+          )}
         </div>
-      )}
+      </div>
 
-      {intolerances.length > 0 && (
-        <p><strong>Intolérances :</strong> {intolerances.join(', ')}</p>
-      )}
+      <div className="recipe-body">
+        <div className="recipe-content">
+          <section className="section instructions">
+            <h3>Instructions</h3>
+            {(recipe.fields?.Instructions ?? '').split(/\n{2,}|\n/).map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </section>
+
+          <section className="section ingredients">
+            <h3>Ingrédients</h3>
+            {ingredients.length > 0 ? (
+              <ul>
+                {ingredients.map((ing, idx) => <li key={idx}>{ing}</li>)}
+              </ul>
+            ) : (
+              <p>—</p>
+            )}
+          </section>
+
+          {intolerances.length > 0 && (
+            <p className="intolerances"><strong>Intolérances :</strong> {intolerances.join(', ')}</p>
+          )}
+
+          {recipe.fields?.['Analyse nutritionnelle'] && recipe.fields['Analyse nutritionnelle'].length > 0 && (
+            <div className="nutrition-analysis">
+              <h3>Analyse nutritionnelle</h3>
+              <div className="nutrition-content">
+                {recipe.fields['Analyse nutritionnelle'].map((item, index) => (
+                  <p key={index}>{item}</p>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <aside className="recipe-aside">
+          {/* Image display: support 'Image' (Airtable-style) or 'imageUrl' */}
+          {(() => {
+            const maybeImage = recipe.fields?.Image ?? (recipe.fields as any)?.imageUrl ?? null;
+            if (Array.isArray(maybeImage) && maybeImage.length > 0) {
+              const url = maybeImage[0]?.url ?? maybeImage[0]?.thumbnails?.large?.url ?? null;
+              if (url) return <img src={url} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
+            }
+            if (typeof maybeImage === 'string' && maybeImage.trim() !== '') {
+              return <img src={maybeImage} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
+            }
+            // placeholder
+            return (
+              <div className="recipe-image placeholder">
+                <div className="placeholder-icon">🍽️</div>
+                <div className="placeholder-text">Aucune image</div>
+              </div>
+            );
+          })()}
+
+          {/* small meta block */}
+          <div className="aside-meta">
+            {((recipe.fields as any).prepTime || (recipe.fields as any).cookTime) && (
+              <p><strong>Temps :</strong> {(recipe.fields as any).prepTime ?? 0} min préparation / {(recipe.fields as any).cookTime ?? 0} min cuisson</p>
+            )}
+            {(recipe.fields as any).calories && (
+              <p><strong>Calories :</strong> {(recipe.fields as any).calories} kcal</p>
+            )}
+          </div>
+        </aside>
+      </div>
     </div>
   );
 };

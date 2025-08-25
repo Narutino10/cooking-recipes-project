@@ -24,18 +24,19 @@ const Home = () => {
     if (searchTerm === '') {
       setFilteredRecipes(recipes);
     } else {
-      const filtered = recipes.filter(
-        (recipe) => {
-          const ingredients = getIngredientsFromRecipe(recipe);
-          const ingredientsText = formatIngredientsForSearch(ingredients);
-          
-          return (
-            recipe.fields.Nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            recipe.fields['Type de plat'].toLowerCase().includes(searchTerm.toLowerCase()) ||
-            ingredientsText.includes(searchTerm.toLowerCase())
-          );
-        }
-      );
+      const filtered = recipes.filter((recipe) => {
+        const ingredients = getIngredientsFromRecipe(recipe);
+        const ingredientsText = formatIngredientsForSearch(ingredients);
+
+        const name = String(recipe.fields?.Nom ?? '').toLowerCase();
+        const type = String(recipe.fields?.['Type de plat'] ?? '').toLowerCase();
+
+        return (
+          name.includes(searchTerm.toLowerCase()) ||
+          type.includes(searchTerm.toLowerCase()) ||
+          ingredientsText.includes(searchTerm.toLowerCase())
+        );
+      });
       setFilteredRecipes(filtered);
     }
   }, [searchTerm, recipes]);
@@ -58,9 +59,12 @@ const Home = () => {
         {filteredRecipes.map((recipe) => (
           <li key={recipe.id} className="recipe-card">
             <Link to={`/recipe/${recipe.id}`}>
-              <h2>{recipe.fields.Nom}</h2>
-              <p>Type : {recipe.fields['Type de plat']}</p>
-              <p>Pour {recipe.fields['Nombre de personnes']} personne{recipe.fields['Nombre de personnes'] > 1 ? 's' : ''}</p>
+              <h2>{recipe.fields?.Nom ?? 'Recette'}</h2>
+              <p>Type : {recipe.fields?.['Type de plat'] ?? '—'}</p>
+              <p>
+                Pour {recipe.fields?.['Nombre de personnes'] ?? 1} personne
+                {(typeof recipe.fields?.['Nombre de personnes'] === 'number' && recipe.fields['Nombre de personnes'] > 1) ? 's' : ''}
+              </p>
             </Link>
           </li>
         ))}

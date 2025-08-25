@@ -5,13 +5,15 @@ import { Recipe } from '../types/recipe.type';
  */
 export const getIngredientsFromRecipe = (recipe: Recipe): string[] => {
   // Nouveau format: "Liste ingrédients" comme texte
-  if (recipe.fields["Liste ingrédients"]) {
-    return recipe.fields["Liste ingrédients"].split('\n').filter(ingredient => ingredient.trim() !== '');
+  const liste = recipe.fields?.['Liste ingrédients'];
+  if (typeof liste === 'string' && liste.trim() !== '') {
+    return liste.split('\n').map(s => s.trim()).filter(ingredient => ingredient !== '');
   }
-  
+
   // Ancien format: "Ingrédients" comme array
-  if (recipe.fields.Ingrédients && Array.isArray(recipe.fields.Ingrédients)) {
-    return recipe.fields.Ingrédients;
+  const ingr = recipe.fields?.Ingrédients;
+  if (Array.isArray(ingr)) {
+    return ingr.map(String).map(s => s.trim()).filter(s => s !== '');
   }
   
   return [];
@@ -21,20 +23,17 @@ export const getIngredientsFromRecipe = (recipe: Recipe): string[] => {
  * Extrait les intolérances d'une recette en gérant les deux formats possibles
  */
 export const getIntolerancesFromRecipe = (recipe: Recipe): string[] => {
-  if (!recipe.fields.Intolérances) {
-    return [];
+  const maybe = recipe.fields?.['Intolérances'];
+  if (!maybe) return [];
+
+  if (typeof maybe === 'string') {
+    return maybe.split(',').map(item => item.trim()).filter(item => item !== '');
   }
-  
-  // Si c'est un string, on le split par virgule
-  if (typeof recipe.fields.Intolérances === 'string') {
-    return recipe.fields.Intolérances.split(',').map(item => item.trim()).filter(item => item !== '');
+
+  if (Array.isArray(maybe)) {
+    return maybe.map(String).map(s => s.trim()).filter(s => s !== '');
   }
-  
-  // Si c'est déjà un array
-  if (Array.isArray(recipe.fields.Intolérances)) {
-    return recipe.fields.Intolérances;
-  }
-  
+
   return [];
 };
 

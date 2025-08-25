@@ -10,7 +10,7 @@ const ConfirmEmail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = searchParams.get('token');
+  const token = searchParams.get('token');
     
     if (!token) {
       setStatus('error');
@@ -23,7 +23,9 @@ const ConfirmEmail = () => {
         const response = await confirmEmail(token);
         setStatus('success');
         // Fallback si le backend ne renvoie pas de message
-        setMessage(response?.message || 'Email confirmé avec succès.');
+        const msg = response?.message || 'Email confirmé avec succès.';
+        setMessage(msg);
+        
 
         // Rediriger vers la page de connexion après 3 secondes
         setTimeout(() => {
@@ -35,6 +37,7 @@ const ConfirmEmail = () => {
         const serverMessage = error?.response?.data?.message;
         const fallback = error?.message || 'Erreur lors de la confirmation de l\'email.';
         setMessage(serverMessage || fallback);
+        
       }
     };
 

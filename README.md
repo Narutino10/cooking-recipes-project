@@ -475,3 +475,6 @@ copies or substantial portions of the Software.
 ---
 
 **Dernière mise à jour** : Août 2025 | **Version** : 1.1.0 | **Status** : ✅ Active Development
+
+Suppression User:
+docker exec -it cooking-recipes-db psql -U cooking_user -d cooking_recipes -c "DELETE FROM users;"

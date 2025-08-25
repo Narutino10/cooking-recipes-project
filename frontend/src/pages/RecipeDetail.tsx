@@ -46,9 +46,13 @@ const RecipeDetail = () => {
         <div className="recipe-content">
           <section className="section instructions">
             <h3>Instructions</h3>
-            {(recipe.fields?.Instructions ?? '').split(/\n{2,}|\n/).map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
+            {(recipe.fields?.Instructions ?? '').trim() ? (
+              (recipe.fields?.Instructions ?? '').split(/\n{2,}|\n/).map((p, i) => (
+                <p key={i}>{p}</p>
+              ))
+            ) : (
+              <p className="empty-instructions">Aucune instruction fournie pour cette recette.</p>
+            )}
           </section>
 
           <section className="section ingredients">

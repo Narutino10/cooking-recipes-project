@@ -60,7 +60,8 @@ export const getAllRecipes = async (): Promise<Recipe[]> => {
       'Type de plat': raw.type ?? '',
       Ingrédients: Array.isArray(raw.ingredients) ? raw.ingredients : (raw.ingredients ? String(raw.ingredients).split(',').map((s: string) => s.trim()) : []),
       'Nombre de personnes': raw.servings ?? raw.nbPersons ?? 1,
-      Instructions: raw.instructions ?? raw.description ?? '',
+      Instructions:
+        raw.instructions ?? raw.Instructions ?? raw.description ?? raw.desc ?? raw.text ?? raw.steps ?? '',
       Intolérances: raw.intolerances ?? raw.intolerance ?? [],
       'Analyse nutritionnelle': raw.nutrition ?? raw['Analyse nutritionnelle'] ?? [],
     };
@@ -98,7 +99,7 @@ export const getRecipeById = async (id: string): Promise<Recipe> => {
     'Type de plat': raw.type ?? '',
     Ingrédients: Array.isArray(raw.ingredients) ? raw.ingredients : (raw.ingredients ? String(raw.ingredients).split(',').map((s: string) => s.trim()) : []),
     'Nombre de personnes': raw.servings ?? raw.nbPersons ?? 1,
-    Instructions: raw.instructions ?? raw.description ?? '',
+  Instructions: raw.instructions ?? raw.Instructions ?? raw.description ?? raw.desc ?? raw.text ?? raw.steps ?? '',
     Intolérances: raw.intolerances ?? raw.intolerance ?? [],
     'Analyse nutritionnelle': raw.nutrition ?? raw['Analyse nutritionnelle'] ?? [],
   };

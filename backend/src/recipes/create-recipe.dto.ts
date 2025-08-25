@@ -44,4 +44,33 @@ export class CreateRecipeDto {
   @IsOptional()
   @IsString()
   nutritionId?: string;
+
+  @IsOptional()
+  @IsString()
+  visibility?: 'public' | 'private';
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
+
+  @IsOptional()
+  @IsIn(['easy', 'medium', 'hard'])
+  difficulty?: 'easy' | 'medium' | 'hard';
+
+  @IsOptional()
+  @IsNumber()
+  prepTime?: number;
+
+  @IsOptional()
+  @IsNumber()
+  cookTime?: number;
+
+  @IsOptional()
+  @IsNumber()
+  calories?: number;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }

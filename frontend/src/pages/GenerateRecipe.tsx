@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { generateRecipe } from '../services/aiService';
 import { GeneratedRecipe } from '../types/ai.type';
-import { createRecipe } from '../services/recipeService';
+import { createNewRecipe } from '../services/recipeService';
 import { IntoleranceSelector } from '../components/IntoleranceSelector';
 import '../styles/pages/GenerateRecipe.scss';
 
@@ -54,6 +54,11 @@ const GenerateRecipe = () => {
     if (!generatedRecipe) return;
 
     try {
+      // Prompt user for visibility and optional metadata before saving
+      const visibility = window.prompt('Visibilité (public/private)', 'public') as 'public' | 'private';
+      const tagsInput = window.prompt('Tags (séparés par ,)', '') || '';
+      const difficulty = window.prompt('Difficulté (easy/medium/hard)', 'easy') as 'easy' | 'medium' | 'hard';
+
       const recipeData = {
         name: generatedRecipe.name,
         type: generatedRecipe.type,
@@ -61,9 +66,12 @@ const GenerateRecipe = () => {
         nbPersons: formData.nbPersons,
         intolerances: formData.intolerances, // Déjà un tableau
         instructions: generatedRecipe.instructions,
+        visibility,
+        tags: tagsInput ? tagsInput.split(',').map(t => t.trim()) : [],
+        difficulty,
       };
 
-      await createRecipe(recipeData);
+      await createNewRecipe(recipeData);
       alert('Recette sauvegardée avec succès !');
       setGeneratedRecipe(null);
       setFormData({

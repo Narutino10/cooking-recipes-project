@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import 'dotenv/config';
+import * as express from 'express';
+import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +23,10 @@ async function bootstrap() {
     origin: frontendUrl,
     credentials: true,
   });
+
+  // Serve uploaded files from /uploads
+  const uploadPath = path.join(process.cwd(), 'uploads');
+  app.use('/uploads', express.static(uploadPath));
 
   // Listen on the port provided by env (used by docker-compose) or default to 3001
   const port = parseInt(

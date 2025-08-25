@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ConfirmEmail from './pages/ConfirmEmail';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -17,11 +18,13 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/recipe/:id" element={<RecipeDetail />} />
-          <Route path="/create" element={<CreateRecipe />} />
+          <Route path="/create-recipe" element={<CreateRecipe />} />
           <Route path="/generate" element={<GenerateRecipe />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/confirm-email" element={<ConfirmEmail />} />
+          <Route path="/profile" element={<Profile />} />
+
         </Routes>
       </main>
       <Footer />

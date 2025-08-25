@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ConfirmEmail from './pages/ConfirmEmail';
 import Profile from './pages/Profile';
+import ChatPage from './pages/ChatPage';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/confirm-email" element={<ConfirmEmail />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/chat" element={<ChatPage />} />
 
         </Routes>
       </main>

@@ -1,0 +1,7 @@
+.chat-page { padding: 20px; max-width: 800px; margin: 0 auto;
+  .chat-window { border: 1px solid #eee; min-height: 300px; padding: 12px; margin: 12px 0; overflow:auto; background:#fff; }
+  .chat-msg { margin-bottom:8px; }
+  .chat-msg.system { color:#666; font-style:italic; }
+  .chat-input{ display:flex; gap:8px; }
+  .chat-input input{ flex:1; padding:8px; }
+}

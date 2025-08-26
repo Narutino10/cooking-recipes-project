@@ -74,13 +74,12 @@ const UpdateRecipe = () => {
     setIsSubmitting(true);
     try {
       const payload: any = {
+        // Only include properties defined in UpdateRecipeDto to satisfy ValidationPipe
         name: formData.name,
-        type: formData.type,
         ingredients: formData.ingredients ? formData.ingredients.split(',').map((s: string) => s.trim()) : [],
         servings: Number(formData.nbPersons),
         intolerances: formData.intolerances ? formData.intolerances.split(',').map((s: string) => s.trim()) : [],
         instructions: formData.instructions,
-        visibility: formData.visibility,
         tags: formData.tags ? formData.tags.split(',').map((s: string) => s.trim()) : [],
         difficulty: formData.difficulty,
         prepTime: formData.prepTime ? Number(formData.prepTime) : undefined,

@@ -13,13 +13,11 @@ import {
   UseInterceptors,
   ForbiddenException,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import type { Express } from 'express';
 import { diskStorage } from 'multer';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import type { Request as ExpressRequest } from 'express';
-
-// Minimal Multer file shape used in this controller to avoid depending on global types
-type MulterFile = {
+// Local lightweight file shape for uploaded files (avoid referencing global.Express.Multer)
+type UploadFile = {
   originalname?: string;
   filename?: string;
   [key: string]: unknown;
@@ -84,8 +82,8 @@ export class RecipesController {
       storage: diskStorage({
         destination: (
           req: ExpressRequest,
-          file: MulterFile,
-          cb: (err: unknown, destination: string) => void,
+          file: UploadFile,
+          cb: (err: Error | null, destination: string) => void,
         ) => {
           const uploadPath = path.join(process.cwd(), 'uploads');
           if (!fs.existsSync(uploadPath)) {
@@ -95,13 +93,13 @@ export class RecipesController {
         },
         filename: (
           req: ExpressRequest,
-          file: MulterFile,
-          cb: (err: unknown, filename: string) => void,
+          file: UploadFile,
+          cb: (err: Error | null, filename: string) => void,
         ) => {
           const originalName =
             typeof file?.originalname === 'string' ? file.originalname : 'file';
           // safeName computed from a verified string
-          const safeName = `${Date.now()}_${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
           cb(null, safeName);
         },
       }),
@@ -109,7 +107,7 @@ export class RecipesController {
   )
   /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
   async createWithImage(
-    @UploadedFiles() files: Express.Multer.File[] | undefined,
+    @UploadedFiles() files: UploadFile[] | undefined,
     @Body() body: Record<string, string>,
     @Request() req: { user: { id: string } },
   ) {
@@ -146,8 +144,8 @@ export class RecipesController {
 
     if (Array.isArray(files) && files.length > 0) {
       dto.imageUrls = files
-        .filter((f) => typeof f.filename === 'string')
-        .map((f) => `/uploads/${f.filename}`);
+        .filter((f: UploadFile) => typeof f.filename === 'string')
+        .map((f: UploadFile) => `/uploads/${String(f.filename)}`);
     }
 
     return this.recipesService.create(dto as CreateRecipeDto, req.user.id);
@@ -161,8 +159,8 @@ export class RecipesController {
       storage: diskStorage({
         destination: (
           req: ExpressRequest,
-          file: MulterFile,
-          cb: (err: unknown, destination: string) => void,
+          file: UploadFile,
+          cb: (err: Error | null, destination: string) => void,
         ) => {
           const uploadPath = path.join(process.cwd(), 'uploads');
           if (!fs.existsSync(uploadPath)) {
@@ -172,12 +170,12 @@ export class RecipesController {
         },
         filename: (
           req: ExpressRequest,
-          file: MulterFile,
-          cb: (err: unknown, filename: string) => void,
+          file: UploadFile,
+          cb: (err: Error | null, filename: string) => void,
         ) => {
           const originalName =
             typeof file?.originalname === 'string' ? file.originalname : 'file';
-          const safeName = `${Date.now()}_${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
           cb(null, safeName);
         },
       }),
@@ -185,7 +183,7 @@ export class RecipesController {
   )
   async updateImages(
     @Param('id') id: string,
-    @UploadedFiles() files: Express.Multer.File[] | undefined,
+    @UploadedFiles() files: UploadFile[] | undefined,
     @Body() body: Record<string, string>,
     @Request() req: { user: { id: string } },
   ) {
@@ -216,7 +214,7 @@ export class RecipesController {
           const filePath = path.join(process.cwd(), 'uploads', filename);
           try {
             if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-          } catch (e) {
+          } catch {
             // ignore unlink errors
           }
         }
@@ -225,14 +223,14 @@ export class RecipesController {
 
     if (Array.isArray(files) && files.length > 0) {
       const added = files
-        .filter((f) => typeof f.filename === 'string')
-        .map((f) => `/uploads/${f.filename}`);
+        .filter((f: UploadFile) => typeof f.filename === 'string')
+        .map((f: UploadFile) => `/uploads/${String(f.filename)}`);
       current = current.concat(added);
     }
 
     await this.recipesService.update(
       id,
-      { imageUrls: current } as any,
+      { imageUrls: current } as UpdateRecipeDto,
       req.user.id,
     );
     return { imageUrls: current };

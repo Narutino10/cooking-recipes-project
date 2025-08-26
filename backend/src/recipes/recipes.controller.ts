@@ -24,6 +24,17 @@ type UploadFile = {
 };
 import * as fs from 'fs';
 import * as path from 'path';
+// Helper to locate the uploads directory robustly. Prefer repository root `uploads/` if present,
+// otherwise use `process.cwd()/uploads` and create it if needed.
+function getUploadPath(): string {
+  const p1 = path.join(process.cwd(), 'uploads');
+  const p2 = path.join(process.cwd(), '..', 'uploads');
+  if (fs.existsSync(p1)) return p1;
+  if (fs.existsSync(p2)) return p2;
+  // fallback: ensure p1 exists
+  fs.mkdirSync(p1, { recursive: true });
+  return p1;
+}
 import { RecipesService } from './recipes.service';
 import { CreateRecipeDto } from './create-recipe.dto';
 import { UpdateRecipeDto } from './update-recipe.dto';
@@ -85,32 +96,18 @@ export class RecipesController {
           file: UploadFile,
           cb: (err: NodeJS.ErrnoException | null, destination: string) => void,
         ) => {
-          const uploadPath = path.join(process.cwd(), 'uploads');
-          try {
-            if (!fs.existsSync(uploadPath)) {
-              fs.mkdirSync(uploadPath, { recursive: true });
-            }
-            cb(null, uploadPath);
-          } catch (error) {
-            cb(error as NodeJS.ErrnoException, uploadPath);
-          }
+          const uploadPath = getUploadPath();
+          cb(null, uploadPath);
         },
         filename: (
           req: ExpressRequest,
           file: UploadFile,
           cb: (err: NodeJS.ErrnoException | null, filename: string) => void,
         ) => {
-          try {
-            const originalName =
-              typeof file?.originalname === 'string'
-                ? file.originalname
-                : 'file';
-            // safeName computed from a verified string
-            const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-            cb(null, safeName);
-          } catch (error) {
-            cb(error as NodeJS.ErrnoException, 'file');
-          }
+          const originalName =
+            typeof file?.originalname === 'string' ? file.originalname : 'file';
+          const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          cb(null, safeName);
         },
       }),
     }),
@@ -164,6 +161,7 @@ export class RecipesController {
   // Update images for an existing recipe: add new uploaded files and remove any URLs listed in 'remove' body param
   @Put(':id/upload')
   @UseGuards(JwtAuthGuard)
+  /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
   @UseInterceptors(
     FilesInterceptor('images', 5, {
       storage: diskStorage({
@@ -172,35 +170,23 @@ export class RecipesController {
           file: UploadFile,
           cb: (err: NodeJS.ErrnoException | null, destination: string) => void,
         ) => {
-          const uploadPath = path.join(process.cwd(), 'uploads');
-          try {
-            if (!fs.existsSync(uploadPath)) {
-              fs.mkdirSync(uploadPath, { recursive: true });
-            }
-            cb(null, uploadPath);
-          } catch (error) {
-            cb(error as NodeJS.ErrnoException, uploadPath);
-          }
+          const uploadPath = getUploadPath();
+          cb(null, uploadPath);
         },
         filename: (
           req: ExpressRequest,
           file: UploadFile,
           cb: (err: NodeJS.ErrnoException | null, filename: string) => void,
         ) => {
-          try {
-            const originalName =
-              typeof file?.originalname === 'string'
-                ? file.originalname
-                : 'file';
-            const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-            cb(null, safeName);
-          } catch (error) {
-            cb(error as NodeJS.ErrnoException, 'file');
-          }
+          const originalName =
+            typeof file?.originalname === 'string' ? file.originalname : 'file';
+          const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          cb(null, safeName);
         },
       }),
     }),
   )
+  /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
   async updateImages(
     @Param('id') id: string,
     @UploadedFiles() files: UploadFile[] | undefined,

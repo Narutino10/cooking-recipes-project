@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/components/Header.scss';
@@ -7,7 +7,9 @@ const Header = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,6 +37,29 @@ const Header = () => {
     setShowDropdown(!showDropdown);
   };
 
+  const toggleMobile = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const closeMobile = () => {
+    setMobileOpen(false);
+  };
+
+  // close mobile menu on route change
+  useEffect(() => {
+    closeMobile();
+  }, [location.pathname]);
+
+  // close mobile menu on Escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeMobile();
+    };
+
+    if (mobileOpen) document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [mobileOpen]);
+
   return (
     <header className="header">
       <div className="header-container">
@@ -45,29 +70,40 @@ const Header = () => {
           </Link>
         </div>
 
-        <nav className="nav-links">
-          <Link to="/" className="nav-link">
+        <button
+          className={`mobile-burger ${mobileOpen ? 'open' : ''}`}
+          aria-label="Basculer la navigation"
+          aria-expanded={mobileOpen}
+          onClick={toggleMobile}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <nav className={`nav-links ${mobileOpen ? 'open' : ''}`}>
+          <Link to="/" className="nav-link" onClick={closeMobile}>
             <span className="nav-icon">🏠</span>
             Accueil
           </Link>
           
           {isAuthenticated ? (
             <>
-              <Link to="/my-recipes" className="nav-link">
+              <Link to="/my-recipes" className="nav-link" onClick={closeMobile}>
                 <span className="nav-icon">📖</span>
                 Mes Recettes
               </Link>
-              <Link to="/create-recipe" className="nav-link">
+              <Link to="/create-recipe" className="nav-link" onClick={closeMobile}>
                 <span className="nav-icon">➕</span>
                 Créer une recette
               </Link>
-              <Link to="/generate" className="nav-link">
+              <Link to="/generate" className="nav-link" onClick={closeMobile}>
                 <span className="nav-icon">🤖</span>
                 Générer avec IA
               </Link>
             </>
           ) : (
-            <Link to="/generate" className="nav-link">
+            <Link to="/generate" className="nav-link" onClick={closeMobile}>
               <span className="nav-icon">🤖</span>
               Générer avec IA
             </Link>

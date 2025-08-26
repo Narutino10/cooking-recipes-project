@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import 'dotenv/config';
 import * as express from 'express';
 import * as path from 'path';
+import * as fs from 'fs';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -24,8 +25,17 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Serve uploaded files from /uploads
-  const uploadPath = path.join(process.cwd(), 'uploads');
+  // Serve uploaded files from /uploads (use same discovery logic as controller)
+  const uploadPathCandidate1 = path.join(process.cwd(), 'uploads');
+  const uploadPathCandidate2 = path.join(process.cwd(), '..', 'uploads');
+  const uploadPath = fs.existsSync(uploadPathCandidate1)
+    ? uploadPathCandidate1
+    : fs.existsSync(uploadPathCandidate2)
+      ? uploadPathCandidate2
+      : ((): string => {
+          fs.mkdirSync(uploadPathCandidate1, { recursive: true });
+          return uploadPathCandidate1;
+        })();
   app.use('/uploads', express.static(uploadPath));
 
   // Listen on the port provided by env (used by docker-compose) or default to 3001

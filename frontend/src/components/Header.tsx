@@ -53,6 +53,10 @@ const Header = () => {
           
           {isAuthenticated ? (
             <>
+              <Link to="/my-recipes" className="nav-link">
+                <span className="nav-icon">📖</span>
+                Mes Recettes
+              </Link>
               <Link to="/create-recipe" className="nav-link">
                 <span className="nav-icon">➕</span>
                 Créer une recette
@@ -116,7 +120,7 @@ const Header = () => {
                     Mon Profil
                   </Link>
                   <Link 
-                    to="/profile" 
+                    to="/my-recipes" 
                     className="dropdown-item"
                     onClick={() => setShowDropdown(false)}
                   >

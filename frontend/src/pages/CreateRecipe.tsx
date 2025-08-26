@@ -1,8 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { createNewRecipe, createRecipeWithImage } from '../services/recipeService';
+import { getNewRecipeById, updateRecipe } from '../services/recipeService';
 import '../styles/pages/CreateRecipe.scss';
 
 const CreateRecipe = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState<{
     name: string;
     type: string;
@@ -38,11 +43,47 @@ const CreateRecipe = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   // structured ingredients: name + amount (e.g., sugar + 200g)
   const [ingredientsList, setIngredientsList] = useState<{ name: string; amount: string }[]>([
     { name: '', amount: '' },
   ]);
+
+  // Load recipe when ?edit=<id> is present
+  useEffect(() => {
+    const edit = searchParams.get('edit');
+    if (!edit) return;
+    setIsEditing(true);
+    setEditId(edit);
+    (async () => {
+      try {
+        const recipe = await getNewRecipeById(edit);
+        // map recipe to form fields
+        setFormData((fd) => ({
+          ...fd,
+          name: recipe.name ?? fd.name,
+          type: (recipe as any).type ?? fd.type,
+          ingredients: Array.isArray((recipe as any).ingredients) ? (recipe as any).ingredients.join(', ') : (recipe as any).ingredients ?? fd.ingredients,
+          nbPersons: (recipe as any).servings ?? (recipe as any).nbPersons ?? fd.nbPersons,
+          intolerances: Array.isArray((recipe as any).intolerances) ? (recipe as any).intolerances.join(', ') : (recipe as any).intolerances ?? fd.intolerances,
+          instructions: (recipe as any).instructions ?? fd.instructions,
+          description: (recipe as any).description ?? fd.description,
+          visibility: (recipe as any).visibility ?? fd.visibility,
+          tags: Array.isArray((recipe as any).tags) ? (recipe as any).tags.join(', ') : (recipe as any).tags ?? fd.tags,
+          difficulty: (recipe as any).difficulty ?? fd.difficulty,
+          prepTime: (recipe as any).prepTime ? String((recipe as any).prepTime) : fd.prepTime,
+          cookTime: (recipe as any).cookTime ? String((recipe as any).cookTime) : fd.cookTime,
+          calories: (recipe as any).calories ? String((recipe as any).calories) : fd.calories,
+          imageUrl: (recipe as any).imageUrl ?? fd.imageUrl,
+        }));
+      } catch (err) {
+        console.error('load recipe for edit error', err);
+        alert('Impossible de charger la recette pour modification');
+      }
+    })();
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target as HTMLInputElement;
@@ -87,41 +128,55 @@ const CreateRecipe = () => {
         description: `${ingredientsText}${ingredientsText ? '\n\n' : ''}${formData.description}`,
       };
 
-      // If an image file was selected, send multipart/form-data
-      if ((formData as any).imageFile instanceof File) {
-        const fd = new FormData();
-        Object.entries(payload).forEach(([k, v]) => {
-          if (Array.isArray(v)) fd.append(k, v.join(','));
-          else if (v !== undefined && v !== null) fd.append(k, String(v));
-        });
-        fd.append('image', (formData as any).imageFile);
-        await createRecipeWithImage(fd);
+      // If editing, call updateRecipe (image replacement not supported here)
+      if (isEditing && editId) {
+        if ((formData as any).imageFile instanceof File) {
+          alert('Remplacement d\'image lors de la modification non pris en charge pour l\'instant. Retirez le fichier ou mettez à jour l\'image séparément.');
+          setIsSubmitting(false);
+          return;
+        }
+        await updateRecipe(editId, payload as any);
+        alert('Recette mise à jour avec succès !');
+        navigate(`/recipe/${editId}`);
       } else {
-        await createNewRecipe(payload);
+        // If an image file was selected, send multipart/form-data
+        if ((formData as any).imageFile instanceof File) {
+          const fd = new FormData();
+          Object.entries(payload).forEach(([k, v]) => {
+            if (Array.isArray(v)) fd.append(k, v.join(','));
+            else if (v !== undefined && v !== null) fd.append(k, String(v));
+          });
+          fd.append('image', (formData as any).imageFile);
+          await createRecipeWithImage(fd);
+        } else {
+          await createNewRecipe(payload as any);
+        }
+        alert('Recette créée avec succès !');
+        // reset form after create
+        setFormData({
+          name: '',
+          type: '',
+          ingredients: '',
+          nbPersons: 1,
+          intolerances: '',
+          instructions: '',
+          description: '',
+          visibility: 'public',
+          tags: '',
+          difficulty: 'easy',
+          prepTime: '',
+          cookTime: '',
+          calories: '',
+          imageUrl: '',
+          imageFile: null,
+        });
+        setIngredientsList([{ name: '', amount: '' }]);
       }
 
-      alert('Recette créée avec succès !');
-      setFormData({
-        name: '',
-        type: '',
-        ingredients: '',
-        nbPersons: 1,
-        intolerances: '',
-        instructions: '',
-        description: '',
-        visibility: 'public',
-        tags: '',
-        difficulty: 'easy',
-        prepTime: '',
-        cookTime: '',
-        calories: '',
-        imageUrl: '',
-        imageFile: null,
-      });
-      setIngredientsList([{ name: '', amount: '' }]);
+  // handled above
     } catch (err: any) {
       console.error('create recipe error', err);
-      alert(err?.message ?? 'Erreur lors de la création de la recette');
+  alert(err?.message ?? 'Erreur lors de la création / mise à jour de la recette');
     } finally {
       setIsSubmitting(false);
     }
@@ -131,7 +186,7 @@ const CreateRecipe = () => {
     <div className="create-recipe">
       <h1>Créer une nouvelle recette</h1>
       <form onSubmit={handleSubmit}>
-        <input type="text" name="name" placeholder="Nom" value={formData.name} onChange={handleChange} required />
+  <input type="text" name="name" placeholder="Nom" value={formData.name} onChange={handleChange} required />
         <input type="text" name="type" placeholder="Type de plat" value={formData.type} onChange={handleChange} required />
         {/* Ingredients structured input: multiple rows with name + amount */}
         <div className="ingredients-list">
@@ -201,7 +256,7 @@ const CreateRecipe = () => {
         <input type="number" name="calories" placeholder="Calories (kcal)" value={formData.calories} onChange={handleChange} />
         {/* imageUrl removed: use file upload instead */}
 
-        <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Création...' : 'Créer'}</button>
+  <button type="submit" disabled={isSubmitting}>{isSubmitting ? (isEditing ? 'Mise à jour...' : 'Création...') : (isEditing ? 'Mettre à jour' : 'Créer')}</button>
       </form>
     </div>
   );

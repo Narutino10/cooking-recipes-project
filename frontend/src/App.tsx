@@ -11,6 +11,8 @@ import Register from './pages/Register';
 import ConfirmEmail from './pages/ConfirmEmail';
 import Profile from './pages/Profile';
 import ChatPage from './pages/ChatPage';
+import MyRecipes from './pages/MyRecipes';
+import UpdateRecipe from './pages/UpdateRecipe';
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/confirm-email" element={<ConfirmEmail />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/my-recipes" element={<MyRecipes />} />
+          <Route path="/edit-recipe/:id" element={<UpdateRecipe />} />
           <Route path="/chat" element={<ChatPage />} />
 
         </Routes>

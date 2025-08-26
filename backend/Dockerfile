@@ -8,7 +8,7 @@ COPY package*.json ./
 
 # Development stage
 FROM base AS development
-RUN npm install --legacy-peer-deps
+RUN npm install 
 COPY . .
 EXPOSE 3001
 CMD ["npm", "run", "start:dev"]
@@ -26,7 +26,7 @@ WORKDIR /usr/src/app
 # Copy package files and install only production dependencies
 COPY package*.json ./
 ENV NODE_ENV=production
-RUN npm ci --only=production --legacy-peer-deps && npm cache clean --force
+RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application
 COPY --from=build /usr/src/app/dist ./dist

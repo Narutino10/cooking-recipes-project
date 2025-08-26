@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+
 import {
   Controller,
   Get,
@@ -16,12 +18,18 @@ import {
 import { diskStorage } from 'multer';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import type { Request as ExpressRequest } from 'express';
-// Local lightweight file shape for uploaded files (avoid referencing global.Express.Multer)
-type UploadFile = {
+// Use the global Express.Multer.File type (provided by @types/multer) for compatibility
+// Define a minimal UploadFile interface instead of relying on Express.Multer types.
+// This avoids type mismatches between @types/express/@types/multer versions (especially in Docker).
+interface UploadFile {
+  /** original filename on the user's machine */
   originalname?: string;
+  /** filename on disk (set by our diskStorage filename handler) */
   filename?: string;
-  [key: string]: unknown;
-};
+  /** optional buffer when using memory storage */
+  buffer?: Buffer;
+  [key: string]: any;
+}
 import * as fs from 'fs';
 import * as path from 'path';
 // Helper to locate the uploads directory robustly. Prefer repository root `uploads/` if present,
@@ -35,6 +43,17 @@ function getUploadPath(): string {
   fs.mkdirSync(p1, { recursive: true });
   return p1;
 }
+
+// Helpers to safely read Multer file properties and contain necessary eslint disables
+function getSafeOriginalName(file: unknown): string {
+  const original = (file as any)?.originalname;
+  return typeof original === 'string' ? original : 'file';
+}
+
+function hasFilename(file: unknown): file is UploadFile {
+  return !!file && typeof (file as any).filename === 'string';
+}
+
 import { RecipesService } from './recipes.service';
 import { CreateRecipeDto } from './create-recipe.dto';
 import { UpdateRecipeDto } from './update-recipe.dto';
@@ -43,6 +62,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('recipes')
 export class RecipesController {
   constructor(private readonly recipesService: RecipesService) {}
+
+  // Metadata endpoint used by frontend to get valid intolerance options
+  @Get('metadata/intolerances')
+  getIntolerances(): string[] {
+    // Keep in sync with AiController validation options or metadata service if added later
+    return ['Lactose', 'Gluten', 'Nuts', 'Shellfish', 'Soy', 'Eggs', 'Peanuts'];
+  }
 
   @Get()
   async findAll(
@@ -87,7 +113,6 @@ export class RecipesController {
   // New endpoint: accepts multipart/form-data with an optional image file
   @Post('upload')
   @UseGuards(JwtAuthGuard)
-  /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
   @UseInterceptors(
     FilesInterceptor('images', 5, {
       storage: diskStorage({
@@ -104,15 +129,13 @@ export class RecipesController {
           file: UploadFile,
           cb: (err: NodeJS.ErrnoException | null, filename: string) => void,
         ) => {
-          const originalName =
-            typeof file?.originalname === 'string' ? file.originalname : 'file';
+          const originalName = getSafeOriginalName(file);
           const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
           cb(null, safeName);
         },
       }),
     }),
   )
-  /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
   async createWithImage(
     @UploadedFiles() files: UploadFile[] | undefined,
     @Body() body: Record<string, string>,
@@ -150,9 +173,8 @@ export class RecipesController {
       (dto.instructions ? String(dto.instructions).slice(0, 300) : '');
 
     if (Array.isArray(files) && files.length > 0) {
-      dto.imageUrls = files
-        .filter((f: UploadFile) => typeof f.filename === 'string')
-        .map((f: UploadFile) => `/uploads/${String(f.filename)}`);
+      const validFiles = files.filter((f): f is UploadFile => hasFilename(f));
+      dto.imageUrls = validFiles.map((f) => `/uploads/${f.filename}`);
     }
 
     return this.recipesService.create(dto as CreateRecipeDto, req.user.id);
@@ -161,7 +183,6 @@ export class RecipesController {
   // Update images for an existing recipe: add new uploaded files and remove any URLs listed in 'remove' body param
   @Put(':id/upload')
   @UseGuards(JwtAuthGuard)
-  /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
   @UseInterceptors(
     FilesInterceptor('images', 5, {
       storage: diskStorage({
@@ -178,15 +199,13 @@ export class RecipesController {
           file: UploadFile,
           cb: (err: NodeJS.ErrnoException | null, filename: string) => void,
         ) => {
-          const originalName =
-            typeof file?.originalname === 'string' ? file.originalname : 'file';
+          const originalName = getSafeOriginalName(file);
           const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
           cb(null, safeName);
         },
       }),
     }),
   )
-  /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
   async updateImages(
     @Param('id') id: string,
     @UploadedFiles() files: UploadFile[] | undefined,
@@ -229,8 +248,8 @@ export class RecipesController {
 
     if (Array.isArray(files) && files.length > 0) {
       const added = files
-        .filter((f: UploadFile) => typeof f.filename === 'string')
-        .map((f: UploadFile) => `/uploads/${String(f.filename)}`);
+        .filter((f): f is UploadFile => hasFilename(f))
+        .map((f) => `/uploads/${f.filename}`);
       current = current.concat(added);
     }
 

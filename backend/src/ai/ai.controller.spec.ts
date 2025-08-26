@@ -4,7 +4,6 @@ import { MistralService } from '../mistral/mistral.service';
 
 describe('AiController', () => {
   let controller: AiController;
-  let mistralService: MistralService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -22,7 +21,6 @@ describe('AiController', () => {
     }).compile();
 
     controller = module.get<AiController>(AiController);
-    mistralService = module.get<MistralService>(MistralService);
   });
 
   it('should be defined', () => {

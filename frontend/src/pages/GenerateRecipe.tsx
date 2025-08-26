@@ -63,12 +63,13 @@ const GenerateRecipe = () => {
         name: generatedRecipe.name,
         type: generatedRecipe.type,
         ingredients: generatedRecipe.ingredients,
-        nbPersons: formData.nbPersons,
+  servings: formData.nbPersons,
         intolerances: formData.intolerances, // Déjà un tableau
         instructions: generatedRecipe.instructions,
         visibility,
         tags: tagsInput ? tagsInput.split(',').map(t => t.trim()) : [],
         difficulty,
+  imageUrl: generatedRecipe.imageUrl ?? undefined,
       };
 
       await createNewRecipe(recipeData);
@@ -162,6 +163,11 @@ const GenerateRecipe = () => {
         <div className="generated-recipe">
           <h2>Recette générée ✨</h2>
           <div className="recipe-content">
+            {generatedRecipe.imageUrl && (
+              <div className="generated-image">
+                <img src={generatedRecipe.imageUrl.startsWith('/') ? `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}${generatedRecipe.imageUrl}` : generatedRecipe.imageUrl} alt={generatedRecipe.name} />
+              </div>
+            )}
             <h3>{generatedRecipe.name}</h3>
             <p><strong>Type :</strong> {generatedRecipe.type}</p>
             

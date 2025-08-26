@@ -1,4 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
+import axios from 'axios';
 
 export interface NutritionAnalysis {
   calories: number;
@@ -23,6 +26,7 @@ export interface GeneratedRecipe {
   type: string;
   ingredients: string[];
   instructions: string;
+  imageUrl?: string;
   nutritionAnalysis: NutritionAnalysis;
 }
 
@@ -65,7 +69,18 @@ export class MistralService {
     // Simulation d'un délai d'API
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    return this.getMockRecipe(request);
+    const recipe = this.getMockRecipe(request);
+
+    // Try to generate an image if an external image API is configured
+    try {
+      const prompt = `${recipe.name} - image of the prepared dish`; // simple prompt
+      const img = await this.generateImage(prompt);
+      if (img) recipe.imageUrl = img;
+    } catch {
+      // ignore image generation errors and keep mock/random image
+    }
+
+    return recipe;
   }
 
   private getMockRecipe(request: GenerateRecipeRequest): GeneratedRecipe {
@@ -88,8 +103,85 @@ export class MistralService {
       type: this.getRecipeType(ingredients),
       ingredients: recipeIngredients,
       instructions,
+      imageUrl: this.getRandomUploadImage(),
       nutritionAnalysis: this.getMockNutritionAnalysis(ingredients),
     };
+  }
+
+  private getRandomUploadImage(): string | undefined {
+    try {
+      const uploadDir = path.join(process.cwd(), 'uploads');
+      if (!fs.existsSync(uploadDir)) return undefined;
+      const files = fs.readdirSync(uploadDir).filter((f) => {
+        const ext = path.extname(f).toLowerCase();
+        return ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext);
+      });
+      if (files.length === 0) return undefined;
+      const choice = files[Math.floor(Math.random() * files.length)];
+      return `/uploads/${choice}`;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async generateImage(prompt: string): Promise<string | undefined> {
+    const apiUrl = process.env.MISTRAL_IMAGE_API_URL;
+    const apiKey = process.env.MISTRAL_API_KEY;
+    if (!apiUrl || !apiKey) return undefined;
+
+    try {
+      const resp = await axios.post(
+        apiUrl,
+        { prompt },
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 20000,
+        },
+      );
+
+      const data: unknown = resp.data;
+      // Accept either { url: string } or { base64: string }
+      const obj = data as Record<string, unknown>;
+      const urlVal = obj['url'];
+      if (typeof urlVal === 'string' && urlVal.length > 0) {
+        return urlVal;
+      }
+      const base64Val = obj['base64'];
+      if (typeof base64Val === 'string' && base64Val.length > 0) {
+        const saved = this.saveBase64Image(base64Val);
+        return saved;
+      }
+      return undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private saveBase64Image(base64: string): string | undefined {
+    try {
+      const match = base64.match(
+        /^data:(image\/(png|jpeg|jpg|webp));base64,(.*)$/,
+      );
+      let ext = '.png';
+      let b64 = base64;
+      if (match) {
+        ext = match[2] === 'jpeg' ? '.jpg' : `.${match[2]}`;
+        b64 = match[3];
+      }
+      const buffer = Buffer.from(b64, 'base64');
+      const filename = `${Date.now()}_ai${ext}`;
+      const uploadDir = path.join(process.cwd(), 'uploads');
+      if (!fs.existsSync(uploadDir))
+        fs.mkdirSync(uploadDir, { recursive: true });
+      const filePath = path.join(uploadDir, filename);
+      fs.writeFileSync(filePath, buffer);
+      return `/uploads/${filename}`;
+    } catch {
+      return undefined;
+    }
   }
 
   private generateRecipeName(

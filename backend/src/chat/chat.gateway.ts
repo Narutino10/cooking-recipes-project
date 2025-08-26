@@ -65,4 +65,16 @@ export class ChatGateway
       text: `${client.id} a quitté la salle ${payload.room}`,
     });
   }
+
+  @SubscribeMessage('seen')
+  handleSeen(client: Socket, payload: { room: string }) {
+    // broadcast seen to the room (so clients can mark messages as seen)
+    if (payload?.room) {
+      this.server
+        .to(payload.room)
+        .emit('seen', { by: client.id, at: new Date().toISOString() });
+    } else {
+      this.server.emit('seen', { by: client.id, at: new Date().toISOString() });
+    }
+  }
 }

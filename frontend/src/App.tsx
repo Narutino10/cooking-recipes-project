@@ -5,6 +5,7 @@ import CreateRecipe from './pages/CreateRecipe';
 import GenerateRecipe from './pages/GenerateRecipe';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import ChatWidget from './components/ChatWidget';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ConfirmEmail from './pages/ConfirmEmail';
@@ -30,6 +31,7 @@ function App() {
         </Routes>
       </main>
       <Footer />
+  <ChatWidget />
     </Router>
   );
 }

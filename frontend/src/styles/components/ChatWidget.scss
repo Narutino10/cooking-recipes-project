@@ -1,0 +1,4 @@
+.chat-widget { position: fixed; right: 18px; bottom: 18px; z-index: 1000; .chat-bubble{ width:56px; height:56px; border-radius:50%; background:#3498db; color:white; border:none; cursor:pointer; box-shadow:0 6px 20px rgba(0,0,0,0.2); font-size:20px; }
+  .chat-panel{ width:360px; max-height:70vh; height:520px; box-shadow:0 10px 30px rgba(0,0,0,0.2); border-radius:12px; overflow:hidden; background:white; }
+  .chat-badge{ position:absolute; top:-6px; right:-6px; background:#e74c3c; color:white; font-size:12px; padding:4px 6px; border-radius:12px; min-width:20px; text-align:center; }
+}

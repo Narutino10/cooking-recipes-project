@@ -25,7 +25,8 @@ WORKDIR /usr/src/app
 
 # Copy package files and install only production dependencies
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+ENV NODE_ENV=production
+RUN npm ci --only=production --legacy-peer-deps && npm cache clean --force
 
 # Copy built application
 COPY --from=build /usr/src/app/dist ./dist

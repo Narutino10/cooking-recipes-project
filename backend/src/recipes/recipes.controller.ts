@@ -122,7 +122,6 @@ export class RecipesController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FilesInterceptor('images', 5, {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       storage: diskStorage({
         destination: (
           req: ExpressRequest,
@@ -193,7 +192,6 @@ export class RecipesController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FilesInterceptor('images', 5, {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       storage: diskStorage({
         destination: (
           req: ExpressRequest,

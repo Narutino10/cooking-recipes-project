@@ -29,9 +29,10 @@ export class GenerateRecipeDto {
   @IsArray()
   @IsString({ each: true })
   @ArrayMaxSize(10)
-  @IsIn(['Lactose', 'Gluten'], {
+  @IsIn(['Lactose', 'Gluten', 'Nuts', 'Shellfish', 'Soy', 'Eggs', 'Peanuts'], {
     each: true,
-    message: 'Invalid intolerance. Valid options are: Lactose, Gluten',
+    message:
+      'Invalid intolerance. Valid options are: Lactose, Gluten, Nuts, Shellfish, Soy, Eggs, Peanuts',
   })
   intolerances?: string[];
 

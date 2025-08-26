@@ -125,17 +125,55 @@ export class MistralService {
   }
 
   private async generateImage(prompt: string): Promise<string | undefined> {
-    const apiUrl = process.env.MISTRAL_IMAGE_API_URL;
-    const apiKey = process.env.MISTRAL_API_KEY;
-    if (!apiUrl || !apiKey) return undefined;
+    // Provider selection allows switching image backend without code changes.
+    // Supported providers: 'mistral' (uses MISTRAL_IMAGE_API_URL/MISTRAL_API_KEY),
+    // 'stability' (uses STABILITY_API_KEY and optional STABILITY_API_URL),
+    // If none configured, fall back to the original MISTRAL_* env vars if present.
+    const provider = (process.env.IMAGE_API_PROVIDER || '').toLowerCase();
 
+    try {
+      if (provider === 'stability' || process.env.STABILITY_API_KEY) {
+        const stabilityResult = await this.generateWithStability(
+          prompt,
+          process.env.STABILITY_API_KEY,
+          process.env.STABILITY_API_URL,
+        );
+        if (stabilityResult) return stabilityResult;
+      }
+
+      // Default / generic Mistral-compatible provider (or explicit 'mistral')
+      const mistralUrl =
+        process.env.MISTRAL_IMAGE_API_URL || process.env.IMAGE_API_URL;
+      const mistralKey =
+        process.env.MISTRAL_API_KEY || process.env.IMAGE_API_KEY;
+      if (mistralUrl && mistralKey) {
+        const mistralResult = await this.generateWithGenericApi(
+          prompt,
+          mistralUrl,
+          mistralKey,
+        );
+        if (mistralResult) return mistralResult;
+      }
+
+      return undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  // Generic HTTP-based image provider: send { prompt } and accept { url } or { base64 }
+  private async generateWithGenericApi(
+    prompt: string,
+    apiUrl: string,
+    apiKey: string | undefined,
+  ): Promise<string | undefined> {
     try {
       const resp = await axios.post(
         apiUrl,
         { prompt },
         {
           headers: {
-            Authorization: `Bearer ${apiKey}`,
+            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
             'Content-Type': 'application/json',
           },
           timeout: 20000,
@@ -143,17 +181,77 @@ export class MistralService {
       );
 
       const data: unknown = resp.data;
-      // Accept either { url: string } or { base64: string }
       const obj = data as Record<string, unknown>;
       const urlVal = obj['url'];
-      if (typeof urlVal === 'string' && urlVal.length > 0) {
-        return urlVal;
-      }
+      if (typeof urlVal === 'string' && urlVal.length > 0) return urlVal;
       const base64Val = obj['base64'];
       if (typeof base64Val === 'string' && base64Val.length > 0) {
-        const saved = this.saveBase64Image(base64Val);
-        return saved;
+        return this.saveBase64Image(base64Val);
       }
+
+      return undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  // Minimal integration with Stability AI (text-to-image). This accepts an API key and optional base URL.
+  // The exact request/response shape may differ depending on the Stability account; we accept either
+  // a direct URL in the response or a base64 payload under 'base64'.
+  private async generateWithStability(
+    prompt: string,
+    apiKey: string | undefined,
+    apiUrl?: string,
+  ): Promise<string | undefined> {
+    if (!apiKey) return undefined;
+    const url =
+      apiUrl ||
+      'https://api.stability.ai/v1/generation/stable-diffusion-512-v2-1/text-to-image';
+
+    try {
+      const body = {
+        text_prompts: [{ text: prompt }],
+        cfg_scale: 7,
+        height: 512,
+        width: 512,
+        samples: 1,
+      } as Record<string, unknown>;
+
+      const resp = await axios.post(url, body, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      });
+
+      const data: unknown = resp.data;
+      const obj = data as Record<string, unknown>;
+
+      // Many stability responses include base64-encoded images under nested fields.
+      // We try a few common locations, then fall back to the generic handler below.
+      // Try top-level 'artifacts' array with 'base64'
+      const artifacts = obj['artifacts'];
+      if (Array.isArray(artifacts) && artifacts.length > 0) {
+        const first = artifacts[0] as Record<string, unknown>;
+        const firstBase64 = first['base64'];
+        if (typeof firstBase64 === 'string' && firstBase64.length > 0) {
+          return this.saveBase64Image(firstBase64);
+        }
+        // sometimes they return a URL
+        const firstUrl = first['url'];
+        if (typeof firstUrl === 'string' && firstUrl.length > 0) {
+          return firstUrl;
+        }
+      }
+
+      // generic fallback: accept { url } or { base64 } top-level
+      const urlVal = obj['url'];
+      if (typeof urlVal === 'string' && urlVal.length > 0) return urlVal;
+      const base64Val = obj['base64'];
+      if (typeof base64Val === 'string' && base64Val.length > 0)
+        return this.saveBase64Image(base64Val);
+
       return undefined;
     } catch {
       return undefined;

@@ -42,8 +42,17 @@ const GenerateRecipe = () => {
 
       const recipe = await generateRecipe(payload);
       setGeneratedRecipe(recipe);
-    } catch (err) {
-      setError('Erreur lors de la génération de la recette. Veuillez réessayer.');
+    } catch (err: any) {
+      // Axios error: try to extract backend message
+      let msg = 'Erreur lors de la génération de la recette. Veuillez réessayer.';
+      if (err?.response?.data?.message) {
+        if (Array.isArray(err.response.data.message)) {
+          msg = err.response.data.message.join(' ');
+        } else {
+          msg = err.response.data.message;
+        }
+      }
+      setError(msg);
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -154,22 +163,30 @@ const GenerateRecipe = () => {
 
         <button type="submit" disabled={isLoading}>
           {isLoading ? 'Génération en cours...' : 'Générer la recette'}
-        </button>
-      </form>
+            </button>
+          </form>
 
-      {error && <div className="error-message">{error}</div>}
+          {isLoading && (
+            <div className="loader" style={{ margin: '2rem auto', textAlign: 'center' }}>
+              <span role="img" aria-label="Chargement" style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }}>🍳</span>
+              <div>Génération de la recette et de l'image IA...</div>
+            </div>
+          )}
 
-      {generatedRecipe && (
-        <div className="generated-recipe">
-          <h2>Recette générée ✨</h2>
-          <div className="recipe-content">
-            {generatedRecipe.imageUrl && (
-              <div className="generated-image">
-                <img src={generatedRecipe.imageUrl.startsWith('/') ? `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}${generatedRecipe.imageUrl}` : generatedRecipe.imageUrl} alt={generatedRecipe.name} />
-              </div>
-            )}
-            <h3>{generatedRecipe.name}</h3>
-            <p><strong>Type :</strong> {generatedRecipe.type}</p>
+          {error && <div className="error-message">{error}</div>}
+
+          {generatedRecipe && (
+            <div className="generated-recipe">
+              <h2>Recette générée ✨</h2>
+              <div className="recipe-content">
+                {generatedRecipe.imageUrl && (
+                  <div className="generated-image" style={{ textAlign: 'center' }}>
+                    <img src={generatedRecipe.imageUrl.startsWith('/') ? `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}${generatedRecipe.imageUrl}` : generatedRecipe.imageUrl} alt={generatedRecipe.name} style={{ maxWidth: '100%', borderRadius: '8px', boxShadow: '0 2px 8px #0001' }} />
+                    <div style={{ fontSize: '0.95em', color: '#888', marginTop: '0.5em' }}>Image générée par IA (Stable Diffusion)</div>
+                  </div>
+                )}
+                <h3>{generatedRecipe.name}</h3>
+                <p><strong>Type :</strong> {generatedRecipe.type}</p>
             
             <div className="ingredients-section">
               <h4>Ingrédients :</h4>

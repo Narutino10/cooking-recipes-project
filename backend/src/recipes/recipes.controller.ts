@@ -83,24 +83,34 @@ export class RecipesController {
         destination: (
           req: ExpressRequest,
           file: UploadFile,
-          cb: (err: Error | null, destination: string) => void,
+          cb: (err: NodeJS.ErrnoException | null, destination: string) => void,
         ) => {
           const uploadPath = path.join(process.cwd(), 'uploads');
-          if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
+          try {
+            if (!fs.existsSync(uploadPath)) {
+              fs.mkdirSync(uploadPath, { recursive: true });
+            }
+            cb(null, uploadPath);
+          } catch (error) {
+            cb(error as NodeJS.ErrnoException, uploadPath);
           }
-          cb(null, uploadPath);
         },
         filename: (
           req: ExpressRequest,
           file: UploadFile,
-          cb: (err: Error | null, filename: string) => void,
+          cb: (err: NodeJS.ErrnoException | null, filename: string) => void,
         ) => {
-          const originalName =
-            typeof file?.originalname === 'string' ? file.originalname : 'file';
-          // safeName computed from a verified string
-          const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-          cb(null, safeName);
+          try {
+            const originalName =
+              typeof file?.originalname === 'string'
+                ? file.originalname
+                : 'file';
+            // safeName computed from a verified string
+            const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            cb(null, safeName);
+          } catch (error) {
+            cb(error as NodeJS.ErrnoException, 'file');
+          }
         },
       }),
     }),
@@ -160,23 +170,33 @@ export class RecipesController {
         destination: (
           req: ExpressRequest,
           file: UploadFile,
-          cb: (err: Error | null, destination: string) => void,
+          cb: (err: NodeJS.ErrnoException | null, destination: string) => void,
         ) => {
           const uploadPath = path.join(process.cwd(), 'uploads');
-          if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
+          try {
+            if (!fs.existsSync(uploadPath)) {
+              fs.mkdirSync(uploadPath, { recursive: true });
+            }
+            cb(null, uploadPath);
+          } catch (error) {
+            cb(error as NodeJS.ErrnoException, uploadPath);
           }
-          cb(null, uploadPath);
         },
         filename: (
           req: ExpressRequest,
           file: UploadFile,
-          cb: (err: Error | null, filename: string) => void,
+          cb: (err: NodeJS.ErrnoException | null, filename: string) => void,
         ) => {
-          const originalName =
-            typeof file?.originalname === 'string' ? file.originalname : 'file';
-          const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-          cb(null, safeName);
+          try {
+            const originalName =
+              typeof file?.originalname === 'string'
+                ? file.originalname
+                : 'file';
+            const safeName = `${Date.now()}_${String(originalName).replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            cb(null, safeName);
+          } catch (error) {
+            cb(error as NodeJS.ErrnoException, 'file');
+          }
         },
       }),
     }),

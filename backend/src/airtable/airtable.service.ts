@@ -113,7 +113,8 @@ export class AirtableService {
         'Type de plat': data.type,
         // Note: Skipping ingredients for now as the field expects linked records
         // We could add a simple text field for ingredients in Airtable as a workaround
-        'Nombre de personnes': data.nbPersons,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+        'Nombre de personnes': (data as any).nbPersons ?? data.servings,
         Intolérances: filteredIntolerances,
         Instructions: data.instructions,
         'Analyse nutritionnelle': [

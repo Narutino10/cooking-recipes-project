@@ -4,26 +4,57 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, type DeepPartial } from 'typeorm';
 import { Recipes } from './recipes.entity';
 import { CreateRecipeDto } from './create-recipe.dto';
 import { UpdateRecipeDto } from './update-recipe.dto';
+import { MistralService } from '../mistral/mistral.service';
 
 @Injectable()
 export class RecipesService {
   constructor(
     @InjectRepository(Recipes)
     private recipeRepository: Repository<Recipes>,
+    private readonly mistralService: MistralService,
   ) {}
 
   async create(
     createRecipeDto: CreateRecipeDto,
     authorId: string,
   ): Promise<Recipes> {
-    const recipe = this.recipeRepository.create({
-      ...createRecipeDto,
+    // generate nutrition analysis via Mistral (best-effort)
+    try {
+      await this.mistralService.generateNutritionAnalysis(
+        createRecipeDto.ingredients,
+      );
+    } catch {
+      // non-blocking: continue without nutrition if Mistral fails
+    }
+
+    // Only pass known entity properties to create()
+    const description = createRecipeDto.instructions
+      ? String(createRecipeDto.instructions).slice(0, 300)
+      : '';
+
+    const partial: DeepPartial<Recipes> = {
+      name: createRecipeDto.name,
+      description,
+      instructions: createRecipeDto.instructions,
+      ingredients: createRecipeDto.ingredients,
+      servings: createRecipeDto.servings,
+      prepTime: createRecipeDto.prepTime,
+      cookTime: createRecipeDto.cookTime,
+      tags: createRecipeDto.tags,
+      difficulty: createRecipeDto.difficulty,
+      intolerances: createRecipeDto.intolerances,
+      calories: createRecipeDto.calories,
+      imageUrls: createRecipeDto.imageUrls,
+      visibility: createRecipeDto.visibility,
       authorId,
-    });
+    };
+
+    const recipe = this.recipeRepository.create(partial);
+
     return await this.recipeRepository.save(recipe);
   }
 

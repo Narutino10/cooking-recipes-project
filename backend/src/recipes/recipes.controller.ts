@@ -18,17 +18,24 @@ import {
 import { diskStorage } from 'multer';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import type { Request as ExpressRequest } from 'express';
-// Use the global Express.Multer.File type (provided by @types/multer) for compatibility
-// Define a minimal UploadFile interface instead of relying on Express.Multer types.
-// This avoids type mismatches between @types/express/@types/multer versions (especially in Docker).
+// Define a minimal local UploadFile interface to avoid dependency on Express.Multer
+// which may not be present in all @types/express versions used in containers.
+interface UploadFile {
+  originalname?: string;
+  filename?: string;
+  mimetype?: string;
+  size?: number;
+  buffer?: Buffer;
+}
 interface UploadFile {
   /** original filename on the user's machine */
   originalname?: string;
   /** filename on disk (set by our diskStorage filename handler) */
   filename?: string;
   /** optional buffer when using memory storage */
+  mimetype?: string;
+  size?: number;
   buffer?: Buffer;
-  [key: string]: any;
 }
 import * as fs from 'fs';
 import * as path from 'path';

@@ -4,6 +4,7 @@ import {
   IsArray,
   IsNumber,
   IsEnum,
+  IsIn,
 } from 'class-validator';
 
 export class UpdateRecipeDto {
@@ -40,6 +41,10 @@ export class UpdateRecipeDto {
   tags?: string[];
 
   @IsOptional()
+  @IsIn(['public', 'private'])
+  visibility?: 'public' | 'private';
+
+  @IsOptional()
   @IsEnum(['easy', 'medium', 'hard'])
   difficulty?: 'easy' | 'medium' | 'hard';
 
@@ -57,5 +62,5 @@ export class UpdateRecipeDto {
 
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  imageUrls?: string[];
 }

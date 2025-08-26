@@ -23,7 +23,7 @@ const CreateRecipe = () => {
     cookTime: string;
     calories: string;
     imageUrl: string;
-    imageFile?: File | null;
+  imageFiles?: File[];
   }>({
     name: '',
     type: '',
@@ -39,7 +39,7 @@ const CreateRecipe = () => {
     cookTime: '',
     calories: '',
     imageUrl: '',
-    imageFile: null,
+  imageFiles: [],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -116,7 +116,8 @@ const CreateRecipe = () => {
         name: formData.name,
         type: formData.type,
         ingredients: ingredientsPayload,
-        nbPersons: Number(formData.nbPersons),
+        // backend expects 'servings'
+        servings: Number(formData.nbPersons),
         intolerances: formData.intolerances ? formData.intolerances.split(',').map((i) => i.trim()) : [],
         instructions: formData.instructions,
         visibility: formData.visibility,
@@ -139,14 +140,14 @@ const CreateRecipe = () => {
         alert('Recette mise à jour avec succès !');
         navigate(`/recipe/${editId}`);
       } else {
-        // If an image file was selected, send multipart/form-data
-        if ((formData as any).imageFile instanceof File) {
+        // If image files were selected, send multipart/form-data with key 'images'
+        if (Array.isArray((formData as any).imageFiles) && (formData as any).imageFiles.length > 0) {
           const fd = new FormData();
           Object.entries(payload).forEach(([k, v]) => {
             if (Array.isArray(v)) fd.append(k, v.join(','));
             else if (v !== undefined && v !== null) fd.append(k, String(v));
           });
-          fd.append('image', (formData as any).imageFile);
+          (formData as any).imageFiles.forEach((f: File) => fd.append('images', f));
           await createRecipeWithImage(fd);
         } else {
           await createNewRecipe(payload as any);
@@ -168,7 +169,7 @@ const CreateRecipe = () => {
           cookTime: '',
           calories: '',
           imageUrl: '',
-          imageFile: null,
+          imageFiles: [],
         });
         setIngredientsList([{ name: '', amount: '' }]);
       }
@@ -187,7 +188,17 @@ const CreateRecipe = () => {
       <h1>Créer une nouvelle recette</h1>
       <form onSubmit={handleSubmit}>
   <input type="text" name="name" placeholder="Nom" value={formData.name} onChange={handleChange} required />
-        <input type="text" name="type" placeholder="Type de plat" value={formData.type} onChange={handleChange} required />
+        <label>
+          Type de plat:
+          <select name="type" value={formData.type} onChange={handleChange} required>
+            <option value="">-- Choisir --</option>
+            <option value="dessert">Dessert</option>
+            <option value="breakfast">Petit-déjeuner</option>
+            <option value="main">Plat principal</option>
+            <option value="snack">Snack</option>
+            <option value="drink">Boisson</option>
+          </select>
+        </label>
         {/* Ingredients structured input: multiple rows with name + amount */}
         <div className="ingredients-list">
           <label>Ingrédients (nom + grammage)</label>
@@ -238,9 +249,20 @@ const CreateRecipe = () => {
 
         <input type="text" name="tags" placeholder="Tags (séparés par ,)" value={formData.tags} onChange={handleChange} />
         <label>
-          Image (optionnelle):
-          <input type="file" accept="image/*" onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] ?? null })} />
+          Images (optionnelles):
+          <input type="file" accept="image/*" multiple onChange={(e) => setFormData({ ...formData, imageFiles: e.target.files ? Array.from(e.target.files) : [] })} />
         </label>
+        {/* preview selected images */}
+        {Array.isArray(formData.imageFiles) && formData.imageFiles.length > 0 && (
+          <div className="image-previews">
+            {formData.imageFiles.map((f, i) => (
+              <div key={i} className="preview-item">
+                <img src={URL.createObjectURL(f)} alt={f.name} style={{ maxWidth: 120 }} />
+                <div>{f.name}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <label>
           Difficulté:

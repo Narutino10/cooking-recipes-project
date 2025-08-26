@@ -2,7 +2,7 @@ export interface CreateRecipeDto {
     name: string;
     type: string;
     ingredients: string[];
-    nbPersons: number;
+  servings: number;
     intolerances?: string[];
     instructions: string;
   }

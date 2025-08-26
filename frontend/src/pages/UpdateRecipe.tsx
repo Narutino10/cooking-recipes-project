@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getNewRecipeById, updateRecipe } from '../services/recipeService';
+import { getNewRecipeById, updateRecipe, updateRecipeImages } from '../services/recipeService';
 import '../styles/pages/CreateRecipe.scss';
 
 const UpdateRecipe = () => {
@@ -23,8 +23,8 @@ const UpdateRecipe = () => {
     prepTime: '',
     cookTime: '',
     calories: '',
-    imageUrl: '',
-    imageFile: null,
+  imageUrls: [] as string[],
+  newImageFiles: [] as File[],
   });
 
   useEffect(() => {
@@ -49,6 +49,7 @@ const UpdateRecipe = () => {
           cookTime: (recipe as any).cookTime ? String((recipe as any).cookTime) : fd.cookTime,
           calories: (recipe as any).calories ? String((recipe as any).calories) : fd.calories,
           imageUrl: (recipe as any).imageUrl ?? fd.imageUrl,
+            imageUrls: Array.isArray((recipe as any).imageUrls) ? (recipe as any).imageUrls : ((recipe as any).imageUrl ? [(recipe as any).imageUrl] : fd.imageUrls),
         }));
       } catch (err) {
         console.error('load recipe for update error', err);
@@ -74,8 +75,10 @@ const UpdateRecipe = () => {
     setIsSubmitting(true);
     try {
       const payload: any = {
-        // Only include properties defined in UpdateRecipeDto to satisfy ValidationPipe
+  // Only include properties defined in UpdateRecipeDto to satisfy ValidationPipe
         name: formData.name,
+  // include visibility now supported by backend
+  visibility: formData.visibility,
         ingredients: formData.ingredients ? formData.ingredients.split(',').map((s: string) => s.trim()) : [],
         servings: Number(formData.nbPersons),
         intolerances: formData.intolerances ? formData.intolerances.split(',').map((s: string) => s.trim()) : [],
@@ -95,6 +98,13 @@ const UpdateRecipe = () => {
       }
 
       await updateRecipe(id, payload);
+      // if new images selected, upload them via the images endpoint
+      if (Array.isArray(formData.newImageFiles) && formData.newImageFiles.length > 0) {
+        const fd = new FormData();
+        formData.newImageFiles.forEach((f: File) => fd.append('images', f));
+        // no removals here
+        await updateRecipeImages(id, fd);
+      }
       alert('Recette mise à jour');
       navigate(`/recipe/${id}`);
     } catch (err) {
@@ -112,7 +122,17 @@ const UpdateRecipe = () => {
       <h1>Modifier la recette</h1>
       <form onSubmit={handleSubmit}>
         <input type="text" name="name" placeholder="Nom" value={formData.name} onChange={handleChange} required />
-        <input type="text" name="type" placeholder="Type de plat" value={formData.type} onChange={handleChange} required />
+        <label>
+          Type de plat:
+          <select name="type" value={formData.type} onChange={handleChange} required>
+            <option value="">-- Choisir --</option>
+            <option value="dessert">Dessert</option>
+            <option value="breakfast">Petit-déjeuner</option>
+            <option value="main">Plat principal</option>
+            <option value="snack">Snack</option>
+            <option value="drink">Boisson</option>
+          </select>
+        </label>
 
         <input type="text" name="ingredients" placeholder="Ingrédients (séparés par ,)" value={formData.ingredients} onChange={handleChange} />
         <input type="number" name="nbPersons" placeholder="Nombre de personnes" value={formData.nbPersons} onChange={handleChange} required />
@@ -131,8 +151,24 @@ const UpdateRecipe = () => {
 
         <input type="text" name="tags" placeholder="Tags (séparés par ,)" value={formData.tags} onChange={handleChange} />
         <label>
-          Image (optionnelle, non utilisée pour le moment):
-          <input type="file" accept="image/*" onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] ?? null })} />
+          Images existantes:
+        </label>
+        <div className="existing-images">
+          {Array.isArray(formData.imageUrls) && formData.imageUrls.length > 0 ? (
+            formData.imageUrls.map((url: string, i: number) => (
+              <div key={i} className="existing-image-item">
+                <img src={url.startsWith('/') ? `${process.env.REACT_APP_API_URL ?? 'http://localhost:3001'}${url}` : url} alt={`img-${i}`} style={{ maxWidth: 120 }} />
+                <button type="button" onClick={() => setFormData({ ...formData, imageUrls: formData.imageUrls.filter((u: string) => u !== url), _removedImages: [...(formData._removedImages || []), url] })}>Supprimer</button>
+              </div>
+            ))
+          ) : (
+            <div>Aucune image</div>
+          )}
+        </div>
+
+        <label>
+          Ajouter des images:
+          <input type="file" accept="image/*" multiple onChange={(e) => setFormData({ ...formData, newImageFiles: e.target.files ? Array.from(e.target.files) : [] })} />
         </label>
 
         <label>

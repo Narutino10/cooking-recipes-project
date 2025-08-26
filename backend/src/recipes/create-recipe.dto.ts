@@ -25,7 +25,7 @@ export class CreateRecipeDto {
 
   @IsNumber()
   @Min(1)
-  nbPersons: number;
+  servings: number;
 
   @IsOptional()
   @IsArray()
@@ -71,6 +71,7 @@ export class CreateRecipeDto {
   calories?: number;
 
   @IsOptional()
-  @IsString()
-  imageUrl?: string;
+  @IsArray()
+  @IsString({ each: true })
+  imageUrls?: string[];
 }

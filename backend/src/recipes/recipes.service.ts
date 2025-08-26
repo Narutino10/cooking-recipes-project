@@ -32,6 +32,7 @@ export class RecipesService {
     limit = 10,
   ): Promise<{ recipes: Recipes[]; total: number }> {
     const [recipes, total] = await this.recipeRepository.findAndCount({
+      where: { visibility: 'public' },
       relations: ['author'],
       skip: (page - 1) * limit,
       take: limit,
@@ -100,6 +101,9 @@ export class RecipesService {
       .createQueryBuilder('recipe')
       .leftJoinAndSelect('recipe.author', 'author');
 
+    // only public recipes in search results
+    queryBuilder.where('recipe.visibility = :vis', { vis: 'public' });
+
     ingredients.forEach((ingredient, index) => {
       queryBuilder.andWhere(`recipe.ingredients LIKE :ingredient${index}`, {
         [`ingredient${index}`]: `%${ingredient}%`,
@@ -123,6 +127,9 @@ export class RecipesService {
     const queryBuilder = this.recipeRepository
       .createQueryBuilder('recipe')
       .leftJoinAndSelect('recipe.author', 'author');
+
+    // only public recipes
+    queryBuilder.where('recipe.visibility = :vis', { vis: 'public' });
 
     intolerances.forEach((intolerance, index) => {
       queryBuilder.andWhere(

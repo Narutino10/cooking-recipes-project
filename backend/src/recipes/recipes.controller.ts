@@ -9,10 +9,12 @@ import {
   Param,
   UseGuards,
   Request,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
+  ForbiddenException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import type { Express } from 'express';
 import { diskStorage } from 'multer';
 import type { Request as ExpressRequest } from 'express';
 
@@ -78,7 +80,7 @@ export class RecipesController {
   @UseGuards(JwtAuthGuard)
   /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
   @UseInterceptors(
-    FileInterceptor('image', {
+    FilesInterceptor('images', 5, {
       storage: diskStorage({
         destination: (
           req: ExpressRequest,
@@ -107,7 +109,7 @@ export class RecipesController {
   )
   /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
   async createWithImage(
-    @UploadedFile() file: MulterFile | undefined,
+    @UploadedFiles() files: Express.Multer.File[] | undefined,
     @Body() body: Record<string, string>,
     @Request() req: { user: { id: string } },
   ) {
@@ -118,7 +120,12 @@ export class RecipesController {
       ingredients: body['ingredients']
         ? body['ingredients'].split(',').map((s) => s.trim())
         : [],
-      nbPersons: body['nbPersons'] ? Number(body['nbPersons']) : 1,
+      // accept 'servings' (current entity) and fallback to legacy 'nbPersons'
+      servings: body['servings']
+        ? Number(body['servings'])
+        : body['nbPersons']
+          ? Number(body['nbPersons'])
+          : 1,
       intolerances: body['intolerances']
         ? body['intolerances'].split(',').map((s) => s.trim())
         : [],
@@ -137,11 +144,98 @@ export class RecipesController {
       body['description'] ??
       (dto.instructions ? String(dto.instructions).slice(0, 300) : '');
 
-    if (file && typeof file.filename === 'string') {
-      dto.imageUrl = `/uploads/${file.filename}`;
+    if (Array.isArray(files) && files.length > 0) {
+      dto.imageUrls = files
+        .filter((f) => typeof f.filename === 'string')
+        .map((f) => `/uploads/${f.filename}`);
     }
 
     return this.recipesService.create(dto as CreateRecipeDto, req.user.id);
+  }
+
+  // Update images for an existing recipe: add new uploaded files and remove any URLs listed in 'remove' body param
+  @Put(':id/upload')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FilesInterceptor('images', 5, {
+      storage: diskStorage({
+        destination: (
+          req: ExpressRequest,
+          file: MulterFile,
+          cb: (err: unknown, destination: string) => void,
+        ) => {
+          const uploadPath = path.join(process.cwd(), 'uploads');
+          if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        },
+        filename: (
+          req: ExpressRequest,
+          file: MulterFile,
+          cb: (err: unknown, filename: string) => void,
+        ) => {
+          const originalName =
+            typeof file?.originalname === 'string' ? file.originalname : 'file';
+          const safeName = `${Date.now()}_${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          cb(null, safeName);
+        },
+      }),
+    }),
+  )
+  async updateImages(
+    @Param('id') id: string,
+    @UploadedFiles() files: Express.Multer.File[] | undefined,
+    @Body() body: Record<string, string>,
+    @Request() req: { user: { id: string } },
+  ) {
+    const recipe = await this.recipesService.findOne(id);
+    if (recipe.authorId !== req.user.id) {
+      throw new ForbiddenException('You can only update your own recipes');
+    }
+
+    // remove list: comma separated image urls to remove
+    const removeList = body['remove']
+      ? body['remove']
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    let current: string[] = Array.isArray(recipe.imageUrls)
+      ? recipe.imageUrls.slice()
+      : [];
+
+    // delete files from disk for removed urls
+    for (const url of removeList) {
+      const idx = current.indexOf(url);
+      if (idx !== -1) {
+        current.splice(idx, 1);
+        if (url.startsWith('/uploads/')) {
+          const filename = url.replace('/uploads/', '');
+          const filePath = path.join(process.cwd(), 'uploads', filename);
+          try {
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+          } catch (e) {
+            // ignore unlink errors
+          }
+        }
+      }
+    }
+
+    if (Array.isArray(files) && files.length > 0) {
+      const added = files
+        .filter((f) => typeof f.filename === 'string')
+        .map((f) => `/uploads/${f.filename}`);
+      current = current.concat(added);
+    }
+
+    await this.recipesService.update(
+      id,
+      { imageUrls: current } as any,
+      req.user.id,
+    );
+    return { imageUrls: current };
   }
 
   @Get('my-recipes')

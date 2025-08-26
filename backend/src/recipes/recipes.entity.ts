@@ -49,8 +49,11 @@ export class Recipes {
   @Column({ type: 'int', nullable: true })
   calories: number;
 
-  @Column({ type: 'text', nullable: true })
-  imageUrl: string;
+  @Column({ type: 'simple-array', nullable: true })
+  imageUrls: string[];
+
+  @Column({ type: 'enum', enum: ['public', 'private'], default: 'public' })
+  visibility: 'public' | 'private';
 
   @ManyToOne(() => User, (user) => user.recipes)
   author: User;

@@ -158,6 +158,13 @@ export const createRecipeWithImage = async (formData: FormData): Promise<NewReci
   return response.data;
 };
 
+export const updateRecipeImages = async (id: string, formData: FormData): Promise<{ imageUrls: string[] }> => {
+  const response = await api.put(`/recipes/${id}/upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
 export const updateRecipe = async (id: string, data: Partial<NewRecipe>): Promise<NewRecipe> => {
   const response = await api.put(`/recipes/${id}`, data);
   return response.data;

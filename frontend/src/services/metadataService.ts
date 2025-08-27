@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export interface RecipeMetadata {
   intolerances: string[];
@@ -17,7 +17,20 @@ export const metadataService = {
     } catch (error) {
       console.error('Erreur lors de la récupération des intolérances valides:', error);
       // Fallback sur les valeurs connues si l'API n'est pas disponible
-      return ['Lactose', 'Gluten'];
+      return [
+        'Lactose',
+        'Gluten',
+        'Arachides',
+        'Fruits à coque',
+        'Œufs',
+        'Poisson',
+        'Crustacés',
+        'Soja',
+        'Sésame',
+        'Moutarde',
+        'Céleri',
+        'Sulfites'
+      ];
     }
   },
 

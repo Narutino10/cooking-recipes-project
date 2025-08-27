@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { generateRecipe } from '../services/aiService';
+import { generateRecipeWithImage } from '../services/aiService';
 import { GeneratedRecipe } from '../types/ai.type';
 import { createNewRecipe } from '../services/recipeService';
 import { IntoleranceSelector } from '../components/IntoleranceSelector';
@@ -12,6 +12,8 @@ const GenerateRecipe = () => {
     intolerances: [] as string[], // Changé en tableau
     dietType: '',
     cookingTime: '',
+    generateImage: true,
+    imageStyle: 'gastronomique',
   });
   
   const [generatedRecipe, setGeneratedRecipe] = useState<GeneratedRecipe | null>(null);
@@ -40,7 +42,11 @@ const GenerateRecipe = () => {
         cookingTime: formData.cookingTime ? Number(formData.cookingTime) : undefined,
       };
 
-      const recipe = await generateRecipe(payload);
+      const recipe = await generateRecipeWithImage({
+        ...payload,
+        generateImage: formData.generateImage,
+        imageStyle: formData.imageStyle,
+      });
       setGeneratedRecipe(recipe);
     } catch (err: any) {
       // Axios error: try to extract backend message
@@ -90,6 +96,8 @@ const GenerateRecipe = () => {
         intolerances: [], // Tableau vide
         dietType: '',
         cookingTime: '',
+        generateImage: true,
+        imageStyle: 'gastronomique',
       });
     } catch (err) {
       alert('Erreur lors de la sauvegarde de la recette.');
@@ -161,15 +169,46 @@ const GenerateRecipe = () => {
           />
         </div>
 
+        <div className="form-group">
+          <label>
+            <input
+              type="checkbox"
+              name="generateImage"
+              checked={formData.generateImage}
+              onChange={(e) => setFormData({ ...formData, generateImage: e.target.checked })}
+            />
+            Générer une image avec l'IA (Stability AI)
+          </label>
+        </div>
+
+        {formData.generateImage && (
+          <div className="form-group">
+            <label>Style de l'image :</label>
+            <select
+              name="imageStyle"
+              value={formData.imageStyle}
+              onChange={handleChange}
+            >
+              <option value="gastronomique">Gastronomique</option>
+              <option value="naturel">Naturel</option>
+              <option value="moderne">Moderne</option>
+              <option value="rustique">Rustique</option>
+              <option value="minimaliste">Minimaliste</option>
+            </select>
+          </div>
+        )}
+
         <button type="submit" disabled={isLoading}>
           {isLoading ? 'Génération en cours...' : 'Générer la recette'}
-            </button>
-          </form>
+        </button>
+      </form>
 
           {isLoading && (
             <div className="loader" style={{ margin: '2rem auto', textAlign: 'center' }}>
               <span role="img" aria-label="Chargement" style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }}>🍳</span>
-              <div>Génération de la recette et de l'image IA...</div>
+              <div>
+                Génération de la recette{formData.generateImage ? ' et de l\'image IA' : ''}...
+              </div>
             </div>
           )}
 

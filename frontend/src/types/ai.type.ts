@@ -24,3 +24,20 @@ export interface GenerateRecipeRequest {
   dietType?: string;
   cookingTime?: number;
 }
+
+// New interfaces for image generation
+export interface GenerateImageRequest {
+  prompt: string;
+  style?: string;
+  aspectRatio?: string;
+}
+
+export interface GeneratedImage {
+  imageUrl: string;
+  prompt: string;
+}
+
+export interface GenerateRecipeWithImageRequest extends GenerateRecipeRequest {
+  generateImage?: boolean;
+  imageStyle?: string;
+}

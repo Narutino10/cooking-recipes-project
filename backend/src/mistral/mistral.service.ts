@@ -496,4 +496,28 @@ export class MistralService {
 
     return suggestions.join('\n');
   }
+
+  async generateRecipeText(
+    request: GenerateRecipeRequest,
+  ): Promise<GeneratedRecipe> {
+    // Simulation d'un délai d'API
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const recipe = this.getMockRecipe(request);
+    // Remove imageUrl for text-only generation
+    recipe.imageUrl = undefined;
+
+    return recipe;
+  }
+
+  async generateRecipeWithImage(
+    request: GenerateRecipeRequest,
+  ): Promise<GeneratedRecipe> {
+    // This is the same as generateRecipe but ensures image is included
+    return this.generateRecipe(request);
+  }
+
+  async generateImageFromPrompt(prompt: string): Promise<string | undefined> {
+    return this.generateImage(prompt);
+  }
 }

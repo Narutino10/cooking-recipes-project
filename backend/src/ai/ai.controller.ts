@@ -4,11 +4,11 @@ import {
   IsArray,
   IsNumber,
   IsOptional,
-  ArrayMaxSize,
-  IsIn,
+  IsBoolean,
   IsNotEmpty,
   Min,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import {
   MistralService,
   GeneratedRecipe,
@@ -18,7 +18,15 @@ import {
 export class GenerateRecipeDto {
   @IsArray()
   @IsString({ each: true })
-  @IsNotEmpty({ each: true })
+  @Transform(({ value }) => {
+    // Filter out empty strings and trim whitespace
+    if (Array.isArray(value)) {
+      return value
+        .filter((item: string) => item && item.trim())
+        .map((item: string) => item.trim());
+    }
+    return value as string[];
+  })
   ingredients: string[];
 
   @IsNumber()
@@ -28,12 +36,6 @@ export class GenerateRecipeDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @ArrayMaxSize(10)
-  @IsIn(['Lactose', 'Gluten', 'Nuts', 'Shellfish', 'Soy', 'Eggs', 'Peanuts'], {
-    each: true,
-    message:
-      'Invalid intolerance. Valid options are: Lactose, Gluten, Nuts, Shellfish, Soy, Eggs, Peanuts',
-  })
   intolerances?: string[];
 
   @IsOptional()
@@ -42,8 +44,33 @@ export class GenerateRecipeDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(1)
   cookingTime?: number;
+}
+
+export class GenerateRecipeTextDto extends GenerateRecipeDto {}
+
+export class GenerateImageDto {
+  @IsString()
+  @IsNotEmpty()
+  prompt: string;
+
+  @IsOptional()
+  @IsString()
+  style?: string;
+
+  @IsOptional()
+  @IsString()
+  aspectRatio?: string;
+}
+
+export class GenerateRecipeWithImageDto extends GenerateRecipeDto {
+  @IsOptional()
+  @IsBoolean()
+  generateImage?: boolean;
+
+  @IsOptional()
+  @IsString()
+  imageStyle?: string;
 }
 
 export class AnalyzeNutritionDto {
@@ -77,6 +104,69 @@ export class AiController {
     @Body() generateRecipeDto: GenerateRecipeDto,
   ): Promise<GeneratedRecipe> {
     return await this.mistralService.generateRecipe(generateRecipeDto);
+  }
+
+  @Post('generate-recipe-text')
+  async generateRecipeText(
+    @Body() generateRecipeTextDto: GenerateRecipeTextDto,
+  ): Promise<{ recipeText: string }> {
+    try {
+      console.log(
+        'Received generateRecipeText request:',
+        JSON.stringify(generateRecipeTextDto, null, 2),
+      );
+
+      const recipe = await this.mistralService.generateRecipeText(
+        generateRecipeTextDto,
+      );
+      const recipeText = `**${recipe.name}**
+
+**Type:** ${recipe.type}
+**Ingrédients:**
+${recipe.ingredients.map((ing) => `- ${ing}`).join('\n')}
+
+**Instructions:**
+${recipe.instructions}
+
+**Analyse nutritionnelle:**
+- Calories: ${recipe.nutritionAnalysis.calories}
+- Protéines: ${recipe.nutritionAnalysis.proteins}g
+- Glucides: ${recipe.nutritionAnalysis.carbohydrates}g
+- Lipides: ${recipe.nutritionAnalysis.fats}g
+- Vitamines: ${recipe.nutritionAnalysis.vitamins.join(', ')}
+- Minéraux: ${recipe.nutritionAnalysis.minerals.join(', ')}
+- Description: ${recipe.nutritionAnalysis.description}`;
+
+      return { recipeText };
+    } catch (error) {
+      console.error('Error in generateRecipeText:', error);
+      throw error;
+    }
+  }
+
+  @Post('generate-image')
+  async generateImage(
+    @Body() generateImageDto: GenerateImageDto,
+  ): Promise<{ imageUrl: string; prompt: string }> {
+    const imageUrl = await this.mistralService.generateImageFromPrompt(
+      generateImageDto.prompt,
+    );
+    if (!imageUrl) {
+      throw new Error('Failed to generate image');
+    }
+    return { imageUrl, prompt: generateImageDto.prompt };
+  }
+
+  @Post('generate-recipe-with-image')
+  async generateRecipeWithImage(
+    @Body() generateRecipeWithImageDto: GenerateRecipeWithImageDto,
+  ): Promise<
+    GeneratedRecipe & { generatedImage?: { imageUrl: string; prompt: string } }
+  > {
+    const result = await this.mistralService.generateRecipeWithImage(
+      generateRecipeWithImageDto,
+    );
+    return result;
   }
 
   @Post('analyze-nutrition')

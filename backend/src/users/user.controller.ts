@@ -72,4 +72,16 @@ export class UserController {
       // Ne pas exposer l'email et autres infos sensibles
     };
   }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async getAllUsers() {
+    const users = await this.userService.findAll();
+    return users.map((user) => ({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    }));
+  }
 }

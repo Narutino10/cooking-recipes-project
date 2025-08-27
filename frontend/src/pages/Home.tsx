@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { getAllRecipes } from '../services/recipeService';
 import { Recipe } from '../types/recipe.type';
 import { getIngredientsFromRecipe, formatIngredientsForSearch } from '../utils/recipeUtils';
-import '../styles/pages/Home.scss';
 import useDebounce from '../hooks/useDebounce';
+import RecipeImage from '../components/RecipeImage';
+import '../styles/pages/Home.scss';
 
 const Home = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -74,50 +75,33 @@ const Home = () => {
         {recipesList.map((recipe) => (
           <li key={recipe.id} className="recipe-card">
             <Link to={`/recipe/${recipe.id}`}>
-              <h2>{recipe.fields?.Nom ?? 'Recette'}</h2>
-              <p>Type : {recipe.fields?.['Type de plat'] ?? '—'}</p>
-              <p>
-                Pour {recipe.fields?.['Nombre de personnes'] ?? 1} personne
-                {(typeof recipe.fields?.['Nombre de personnes'] === 'number' && recipe.fields['Nombre de personnes'] > 1) ? 's' : ''}
-              </p>
-              {Array.isArray((recipe.fields as any)?.tags) && (recipe.fields as any).tags.length > 0 && (
-                <div className="tags">
-                  {(recipe.fields as any).tags.map((t: string, i: number) => (
-                    <span key={i} className="badge tag">{t}</span>
-                  ))}
-                </div>
-              )}
+              <div className="recipe-aside">
+                <RecipeImage recipe={recipe} size="medium" />
+              </div>
 
-              <aside className="recipe-aside">
-                {/* Image display: support 'Image' (Airtable-style) or 'imageUrl' */}
-                {(() => {
-                  const maybeImage = recipe.fields?.Image ?? (recipe.fields as any)?.imageUrl ?? null;
-                  if (Array.isArray(maybeImage) && maybeImage.length > 0) {
-                    const url = maybeImage[0]?.url ?? maybeImage[0]?.thumbnails?.large?.url ?? null;
-                    if (url) return <img loading="lazy" src={url} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
-                  }
-                  if (typeof maybeImage === 'string' && maybeImage.trim() !== '') {
-                    return <img loading="lazy" src={maybeImage} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
-                  }
-                  // placeholder
-                  return (
-                    <div className="recipe-image placeholder">
-                      <div className="placeholder-icon">🍽️</div>
-                      <div className="placeholder-text">Aucune image</div>
-                    </div>
-                  );
-                })()}
+              <div className="recipe-content">
+                <h2>{recipe.fields?.Nom ?? 'Recette'}</h2>
+                <p><strong>Type :</strong> {recipe.fields?.['Type de plat'] ?? '—'}</p>
+                <p><strong>Pour :</strong> {recipe.fields?.['Nombre de personnes'] ?? 1} personne{(typeof recipe.fields?.['Nombre de personnes'] === 'number' && recipe.fields['Nombre de personnes'] > 1) ? 's' : ''}</p>
 
-                {/* small meta block */}
-                <div className="aside-meta">
-                  {((recipe.fields as any).prepTime || (recipe.fields as any).cookTime) && (
-                    <p><strong>Temps :</strong> {(recipe.fields as any).prepTime ?? 0} min préparation / {(recipe.fields as any).cookTime ?? 0} min cuisson</p>
-                  )}
-                  {(recipe.fields as any).calories && (
-                    <p><strong>Calories :</strong> {(recipe.fields as any).calories} kcal</p>
-                  )}
-                </div>
-              </aside>
+                {Array.isArray((recipe.fields as any)?.tags) && (recipe.fields as any).tags.length > 0 && (
+                  <div className="tags">
+                    {(recipe.fields as any).tags.map((t: string, i: number) => (
+                      <span key={i} className="badge tag">{t}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* small meta block */}
+              <div className="aside-meta">
+                {((recipe.fields as any).prepTime || (recipe.fields as any).cookTime) && (
+                  <p><strong>Temps :</strong> {(recipe.fields as any).prepTime ?? 0} min préparation / {(recipe.fields as any).cookTime ?? 0} min cuisson</p>
+                )}
+                {(recipe.fields as any).calories && (
+                  <p><strong>Calories :</strong> {(recipe.fields as any).calories} kcal</p>
+                )}
+              </div>
             </Link>
           </li>
         ))}

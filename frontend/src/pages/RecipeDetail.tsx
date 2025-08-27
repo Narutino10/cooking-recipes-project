@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getRecipeById } from '../services/recipeService';
 import { Recipe } from '../types/recipe.type';
 import { getIngredientsFromRecipe, getIntolerancesFromRecipe } from '../utils/recipeUtils';
+import RecipeImage from '../components/RecipeImage';
 import '../styles/pages/RecipeDetail.scss';
 
 const RecipeDetail = () => {
@@ -92,43 +93,7 @@ const RecipeDetail = () => {
         </div>
 
         <aside className="recipe-aside">
-          {/* Image display: support 'Image' (Airtable-style), 'imageUrl' or 'imageUrls' (array of strings) */}
-          {(() => {
-            const apiBase = process.env.REACT_APP_API_URL ?? 'http://localhost:3001';
-            const anyFields = recipe.fields as any;
-            const maybeImage = anyFields?.Image ?? anyFields?.imageUrl ?? anyFields?.imageUrls ?? null;
-
-            // Array cases: Airtable-style objects OR array of string URLs
-            if (Array.isArray(maybeImage) && maybeImage.length > 0) {
-              const first = maybeImage[0];
-              // Airtable-style object with url or thumbnails
-              const objUrl = first?.url ?? first?.thumbnails?.large?.url ?? null;
-              if (objUrl && typeof objUrl === 'string' && objUrl.trim() !== '') {
-                const full = objUrl.startsWith('/') ? `${apiBase}${objUrl}` : objUrl;
-                return <img loading="lazy" src={full} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
-              }
-
-              // array of strings (possibly relative paths)
-              if (typeof first === 'string' && first.trim() !== '') {
-                const full = first.startsWith('/') ? `${apiBase}${first}` : first;
-                return <img loading="lazy" src={full} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
-              }
-            }
-
-            // single string case
-            if (typeof maybeImage === 'string' && maybeImage.trim() !== '') {
-              const full = maybeImage.startsWith('/') ? `${apiBase}${maybeImage}` : maybeImage;
-              return <img loading="lazy" src={full} alt={recipe.fields?.Nom ?? 'image recette'} className="recipe-image" />;
-            }
-
-            // placeholder
-            return (
-              <div className="recipe-image placeholder">
-                <div className="placeholder-icon">🍽️</div>
-                <div className="placeholder-text">Aucune image</div>
-              </div>
-            );
-          })()}
+          <RecipeImage recipe={recipe} size="large" />
 
           {/* small meta block */}
           <div className="aside-meta">

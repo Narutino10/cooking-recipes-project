@@ -33,14 +33,22 @@ export class ChatGateway
   @SubscribeMessage('message')
   handleMessage(
     client: Socket,
-    payload: { user?: string; text: string; room?: string },
+    payload: { user?: string; text: string; room?: string; to?: string },
   ) {
     const out = {
       user: payload.user ?? 'anonymous',
       text: payload.text,
       at: new Date().toISOString(),
+      from: client.id,
     };
-    if (payload.room) {
+
+    if (payload.to) {
+      // Private message: create a room name from sender and receiver IDs
+      const roomName = [client.id, payload.to].sort().join('-');
+      this.server.to(roomName).emit('message', out);
+      // Also send to sender for their own view
+      client.emit('message', out);
+    } else if (payload.room) {
       this.server.to(payload.room).emit('message', out);
     } else {
       this.server.emit('message', out);
@@ -57,13 +65,11 @@ export class ChatGateway
     });
   }
 
-  @SubscribeMessage('leave')
-  handleLeave(client: Socket, payload: { room: string }) {
-    void client.leave(payload.room);
-    client.emit('left', { room: payload.room });
-    this.server.to(payload.room).emit('system', {
-      text: `${client.id} a quitté la salle ${payload.room}`,
-    });
+  @SubscribeMessage('join-private')
+  handleJoinPrivate(client: Socket, payload: { with: string }) {
+    const roomName = [client.id, payload.with].sort().join('-');
+    void client.join(roomName);
+    client.emit('joined-private', { room: roomName, with: payload.with });
   }
 
   @SubscribeMessage('seen')

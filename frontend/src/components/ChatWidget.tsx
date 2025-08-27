@@ -37,15 +37,15 @@ const ChatWidget = () => {
   }, [socketRef, open]);
 
   return (
-    <div className={`chat-widget ${open ? 'open' : ''}`}>
-    {open && (
-        <div className="chat-panel" role="dialog" aria-label="Chat">
-      <ChatPage socketRef={socketRef} />
+    <div className="chat-widget">
+      {open && (
+        <div className={`chat-panel ${open ? 'open' : ''}`} role="dialog" aria-label="Chat">
+          <ChatPage socketRef={socketRef} />
         </div>
       )}
 
       <button
-        className="chat-bubble"
+        className={`chat-bubble ${open ? 'open' : ''}`}
         type="button"
         aria-pressed={open}
         aria-label={open ? 'Fermer le chat' : 'Ouvrir le chat'}

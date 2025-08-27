@@ -4,6 +4,9 @@ import { CreateRecipeDto } from '../types/create-recipe-dto.type';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
+// Réexport du type Recipe pour une utilisation externe
+export type { Recipe } from '../types/recipe.type';
+
 // Configuration d'axios pour inclure le token automatiquement
 const api = axios.create({
   baseURL: API_URL,
@@ -67,7 +70,12 @@ export const getAllRecipes = async (): Promise<Recipe[]> => {
       'Analyse nutritionnelle': raw.nutrition ?? raw['Analyse nutritionnelle'] ?? [],
     };
     // image handling: keep Airtable-like Image array if possible
-    if (raw.imageUrl) {
+    if (raw.imageUrls && Array.isArray(raw.imageUrls)) {
+      // Handle backend imageUrls array
+      fields.Image = raw.imageUrls.map((url: string) => 
+        url.startsWith('/') ? `${API_URL}${url}` : url
+      );
+    } else if (raw.imageUrl) {
       const img = String(raw.imageUrl);
       fields.Image = img.startsWith('/') ? `${API_URL}${img}` : img;
     } else if (raw.image) {
@@ -109,7 +117,12 @@ export const getRecipeById = async (id: string): Promise<Recipe | null> => {
     Intolérances: raw.intolerances ?? raw.intolerance ?? [],
     'Analyse nutritionnelle': raw.nutrition ?? raw['Analyse nutritionnelle'] ?? [],
   };
-  if (raw.imageUrl) fields.Image = raw.imageUrl;
+  if (raw.imageUrls && Array.isArray(raw.imageUrls)) {
+    // Handle backend imageUrls array
+    fields.Image = raw.imageUrls.map((url: string) => 
+      url.startsWith('/') ? `${API_URL}${url}` : url
+    );
+  } else if (raw.imageUrl) fields.Image = raw.imageUrl;
   else if (raw.image) fields.Image = raw.image;
   // ensure relative urls are prefixed with API_URL
   if (fields.Image) {

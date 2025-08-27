@@ -38,4 +38,10 @@ export class UserService {
     await this.userRepository.update(id, updatePayload);
     return this.findById(id);
   }
+
+  async findAll(): Promise<User[]> {
+    return this.userRepository.find({
+      select: ['id', 'firstName', 'lastName', 'email'],
+    });
+  }
 }

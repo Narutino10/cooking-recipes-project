@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../services/authService';
+import { useAuth } from '../hooks/useAuth';
 import '../styles/pages/Login.scss';
 
 const Login = () => {
@@ -25,8 +25,13 @@ const Login = () => {
 
     try {
       const response = await login(formData);
+
       // Utilise le contexte Auth pour mettre à jour l'état global
-      loginContext(response.accessToken, response.user);
+      loginContext(response.accessToken, {
+        ...response.user,
+        isEmailConfirmed: response.user.isEmailConfirmed ?? false,
+      });
+
       navigate('/');
     } catch (error: any) {
       setError(error.response?.data?.message || 'Erreur de connexion');
@@ -39,9 +44,9 @@ const Login = () => {
     <div className="login-page">
       <div className="login-container">
         <h1>Connexion</h1>
-        
+
         {error && <div className="error-message">{error}</div>}
-        
+
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
             <label htmlFor="email">Email</label>

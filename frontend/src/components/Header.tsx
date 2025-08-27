@@ -101,12 +101,30 @@ const Header = () => {
                 <span className="nav-icon">🤖</span>
                 Générer avec IA
               </Link>
+              <Link to="/forum" className="nav-link" onClick={closeMobile}>
+                <span className="nav-icon">💬</span>
+                Forum
+              </Link>
+              <Link to="/blog" className="nav-link" onClick={closeMobile}>
+                <span className="nav-icon">📝</span>
+                Blog
+              </Link>
             </>
           ) : (
-            <Link to="/generate" className="nav-link" onClick={closeMobile}>
-              <span className="nav-icon">🤖</span>
-              Générer avec IA
-            </Link>
+            <>
+              <Link to="/generate" className="nav-link" onClick={closeMobile}>
+                <span className="nav-icon">🤖</span>
+                Générer avec IA
+              </Link>
+              <Link to="/forum" className="nav-link" onClick={closeMobile}>
+                <span className="nav-icon">💬</span>
+                Forum
+              </Link>
+              <Link to="/blog" className="nav-link" onClick={closeMobile}>
+                <span className="nav-icon">📝</span>
+                Blog
+              </Link>
+            </>
           )}
         </nav>
 

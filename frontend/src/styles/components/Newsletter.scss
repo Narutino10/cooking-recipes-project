@@ -1,0 +1,129 @@
+.newsletter {
+  h5 {
+    color: #ecf0f1;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  p {
+    color: #bdc3c7;
+    font-size: 13px;
+    margin-bottom: 15px;
+    line-height: 1.5;
+  }
+
+  .newsletter-form {
+    .newsletter-input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+
+      input {
+        flex: 1;
+        padding: 10px 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ecf0f1;
+        font-size: 14px;
+        transition: all 0.3s ease;
+
+        &::placeholder {
+          color: #95a5a6;
+        }
+
+        &:focus {
+          outline: none;
+          border-color: #3498db;
+          background: rgba(255, 255, 255, 0.15);
+          box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      .newsletter-btn {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        min-width: 100px;
+
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #c0392b, #a93226);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        &:disabled {
+          background: #95a5a6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
+
+        .loading-spinner {
+          display: inline-block;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      }
+    }
+
+    .newsletter-message {
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 500;
+
+      &.success {
+        background: rgba(39, 174, 96, 0.2);
+        color: #27ae60;
+        border: 1px solid rgba(39, 174, 96, 0.3);
+      }
+
+      &.error {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+        border: 1px solid rgba(231, 76, 60, 0.3);
+      }
+    }
+
+    .newsletter-unsubscribe {
+      background: transparent;
+      color: #95a5a6;
+      border: 1px solid #95a5a6;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover:not(:disabled) {
+        background: rgba(149, 165, 166, 0.1);
+        color: #bdc3c7;
+        border-color: #bdc3c7;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+}

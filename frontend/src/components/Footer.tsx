@@ -1,4 +1,5 @@
 import '../styles/components/Footer.scss';
+import Newsletter from './Newsletter';
 
 const Footer = () => {
   return (
@@ -31,8 +32,8 @@ const Footer = () => {
           <ul>
             <li><a href="/#">Toutes les recettes</a></li>
             <li><a href="/#">Recettes populaires</a></li>
-            <li><a href="/create">Nouvelles recettes</a></li>
-            <li><a href="/#">Par catégorie</a></li>
+            <li><a href="/create-recipe">Créer une recette</a></li>
+            <li><a href="/generate">Générer avec IA</a></li>
           </ul>
         </div>
 
@@ -40,7 +41,7 @@ const Footer = () => {
           <h4>Communauté</h4>
           <ul>
             <li><a href="/forum">Forum</a></li>
-            <li><a href="/#">Partagez vos recettes</a></li>
+            <li><a href="/create-recipe">Partagez vos recettes</a></li>
             <li><a href="/events">Événements culinaires</a></li>
             <li><a href="/blog">Blog</a></li>
           </ul>
@@ -62,14 +63,7 @@ const Footer = () => {
               <span>Paris, France</span>
             </div>
           </div>
-          <div className="newsletter">
-            <h5>Newsletter</h5>
-            <p>Recevez nos meilleures recettes chaque semaine</p>
-            <div className="newsletter-input">
-              <input type="email" placeholder="Votre email" />
-              <button type="submit">S'abonner</button>
-            </div>
-          </div>
+          <Newsletter />
         </div>
       </div>
 

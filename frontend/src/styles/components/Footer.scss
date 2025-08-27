@@ -12,6 +12,12 @@
     grid-template-columns: 2fr 1fr 1fr 1fr;
     gap: 40px;
 
+    @media (max-width: 968px) {
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      padding: 40px 20px 30px;
+    }
+
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
       gap: 30px;
@@ -108,65 +114,6 @@
 
       &:last-child {
         margin-bottom: 25px;
-      }
-    }
-  }
-
-  .newsletter {
-    h5 {
-      color: #ecf0f1;
-      margin-bottom: 10px;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    p {
-      color: #bdc3c7;
-      font-size: 13px;
-      margin-bottom: 15px;
-      line-height: 1.5;
-    }
-
-    .newsletter-input {
-      display: flex;
-      gap: 10px;
-
-      input {
-        flex: 1;
-        padding: 10px 15px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 25px;
-        background: rgba(255, 255, 255, 0.1);
-        color: #ecf0f1;
-        font-size: 14px;
-
-        &::placeholder {
-          color: #95a5a6;
-        }
-
-        &:focus {
-          outline: none;
-          border-color: #3498db;
-          background: rgba(255, 255, 255, 0.15);
-        }
-      }
-
-      button {
-        padding: 10px 20px;
-        background: linear-gradient(135deg, #e74c3c, #c0392b);
-        color: white;
-        border: none;
-        border-radius: 25px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-
-        &:hover {
-          background: linear-gradient(135deg, #c0392b, #a93226);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-        }
       }
     }
   }

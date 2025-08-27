@@ -3,9 +3,26 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 
+export interface NewsletterSubscription {
+  email: string;
+  preferences?: {
+    newRecipes: boolean;
+    weeklyDigest: boolean;
+    communityUpdates: boolean;
+  };
+}
+
+export interface NewsletterEmail {
+  subject: string;
+  content: string;
+  recipients: string[];
+  type: 'new_recipe' | 'weekly_digest' | 'community_update';
+}
+
 @Injectable()
 export class EmailService {
   private transporter: Transporter | null;
+  private newsletterSubscribers: Set<string> = new Set(); // In-memory storage for demo
 
   constructor(private configService: ConfigService) {
     // Support both EMAIL_* and SMTP_* env var names
@@ -149,5 +166,227 @@ export class EmailService {
       }
       return;
     }
+  }
+
+  // Newsletter methods
+  async subscribeToNewsletter(
+    subscription: NewsletterSubscription,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      // In a real app, you'd save this to a database
+      this.newsletterSubscribers.add(subscription.email);
+
+      const fromEmail =
+        this.configService.get<string>('EMAIL_FROM') ||
+        'Cooking Recipes <noreply@cooking-recipes.com>';
+
+      const welcomeMailOptions = {
+        from: fromEmail,
+        to: subscription.email,
+        subject: 'Bienvenue sur Cooking Recipes ! 🍳',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+            <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+              <h1 style="color: #333; text-align: center; margin-bottom: 30px;">🍳 Bienvenue sur Cooking Recipes !</h1>
+
+              <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+                Merci de vous être abonné à notre newsletter ! Vous recevrez désormais :
+              </p>
+
+              <ul style="color: #666; line-height: 1.8; margin-bottom: 30px;">
+                <li>✨ Les meilleures nouvelles recettes chaque semaine</li>
+                <li>👨‍🍳 Conseils et astuces culinaires</li>
+                <li>🎉 Événements et concours exclusifs</li>
+                <li>📱 Mises à jour de la plateforme</li>
+              </ul>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'}"
+                   style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                          color: white; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                  Découvrir les recettes
+                </a>
+              </div>
+
+              <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px;">
+                Vous pouvez vous désabonner à tout moment depuis vos paramètres.
+              </p>
+            </div>
+          </div>
+        `,
+      };
+
+      if (this.transporter) {
+        await this.transporter.sendMail(welcomeMailOptions);
+      } else {
+        console.log('Newsletter welcome email:', welcomeMailOptions);
+      }
+
+      return {
+        success: true,
+        message:
+          'Vous êtes maintenant abonné à notre newsletter ! Bienvenue dans la communauté Cooking Recipes. 🍳',
+      };
+    } catch (error) {
+      console.error("Erreur lors de l'abonnement à la newsletter:", error);
+      throw new Error("Erreur lors de l'abonnement à la newsletter");
+    }
+  }
+
+  async unsubscribeFromNewsletter(
+    email: string,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      this.newsletterSubscribers.delete(email);
+      return {
+        success: true,
+        message:
+          'Vous avez été désabonné de notre newsletter. Nous espérons vous revoir bientôt ! 👋',
+      };
+    } catch (error) {
+      console.error('Erreur lors du désabonnement:', error);
+      throw new Error('Erreur lors du désabonnement');
+    }
+  }
+
+  async sendNewsletterEmail(
+    emailData: NewsletterEmail,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const fromEmail =
+        this.configService.get<string>('EMAIL_FROM') ||
+        'Cooking Recipes <noreply@cooking-recipes.com>';
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const recipient of emailData.recipients) {
+        if (!this.newsletterSubscribers.has(recipient)) {
+          continue; // Skip if not subscribed
+        }
+
+        const mailOptions = {
+          from: fromEmail,
+          to: recipient,
+          subject: emailData.subject,
+          html: this.generateNewsletterHTML(emailData),
+        };
+
+        try {
+          if (this.transporter) {
+            await this.transporter.sendMail(mailOptions);
+          } else {
+            console.log('Newsletter email:', mailOptions);
+          }
+          successCount++;
+        } catch (error) {
+          console.error(`Erreur envoi email à ${recipient}:`, error);
+          failCount++;
+        }
+      }
+
+      return {
+        success: true,
+        message: `Newsletter envoyée à ${successCount} abonnés${failCount > 0 ? ` (${failCount} échecs)` : ''}`,
+      };
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de la newsletter:", error);
+      throw new Error("Erreur lors de l'envoi de la newsletter");
+    }
+  }
+
+  async sendNewRecipeNotification(
+    recipeName: string,
+    recipeId: string,
+    authorName: string,
+  ): Promise<void> {
+    if (this.newsletterSubscribers.size === 0) return;
+
+    const subject = `🍳 Nouvelle recette : ${recipeName}`;
+    const content = `
+      <h2>Découvrez cette nouvelle recette !</h2>
+      <p><strong>${recipeName}</strong> par ${authorName}</p>
+      <p>Une nouvelle recette délicieuse vient d'être ajoutée à notre collection !</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'}/recipe/${recipeId}"
+           style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%);
+                  color: white; text-decoration: none; border-radius: 25px; font-weight: bold;">
+          Voir la recette
+        </a>
+      </div>
+    `;
+
+    const recipients = Array.from(this.newsletterSubscribers);
+    await this.sendNewsletterEmail({
+      subject,
+      content,
+      recipients,
+      type: 'new_recipe',
+    });
+  }
+
+  private generateNewsletterHTML(emailData: NewsletterEmail): string {
+    const templates = {
+      new_recipe: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+          <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #333; margin: 0;">🍳 Cooking Recipes</h1>
+              <p style="color: #666; margin: 10px 0 0;">Votre newsletter hebdomadaire</p>
+            </div>
+            ${emailData.content}
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
+              <p style="color: #999; font-size: 12px;">
+                Vous recevez cet email car vous êtes abonné à notre newsletter.<br>
+                <a href="#" style="color: #999;">Se désabonner</a> | <a href="${this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'}" style="color: #999;">Visiter le site</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      weekly_digest: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+          <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #333; margin: 0;">🍳 Cooking Recipes</h1>
+              <p style="color: #666; margin: 10px 0 0;">Votre digest hebdomadaire</p>
+            </div>
+            ${emailData.content}
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
+              <p style="color: #999; font-size: 12px;">
+                Vous recevez cet email car vous êtes abonné à notre newsletter.<br>
+                <a href="#" style="color: #999;">Se désabonner</a> | <a href="${this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'}" style="color: #999;">Visiter le site</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+      community_update: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+          <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #333; margin: 0;">🍳 Cooking Recipes</h1>
+              <p style="color: #666; margin: 10px 0 0;">Actualités de la communauté</p>
+            </div>
+            ${emailData.content}
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px; text-align: center;">
+              <p style="color: #999; font-size: 12px;">
+                Vous recevez cet email car vous êtes abonné à notre newsletter.<br>
+                <a href="#" style="color: #999;">Se désabonner</a> | <a href="${this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'}" style="color: #999;">Visiter le site</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+
+    return templates[emailData.type] || templates.new_recipe;
+  }
+
+  getNewsletterStats() {
+    return {
+      totalSubscribers: this.newsletterSubscribers.size,
+      subscribers: Array.from(this.newsletterSubscribers),
+    };
   }
 }

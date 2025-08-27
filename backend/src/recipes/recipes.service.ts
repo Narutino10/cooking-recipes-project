@@ -9,6 +9,7 @@ import { Recipes } from './recipes.entity';
 import { CreateRecipeDto } from './create-recipe.dto';
 import { UpdateRecipeDto } from './update-recipe.dto';
 import { MistralService } from '../mistral/mistral.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class RecipesService {
@@ -16,6 +17,7 @@ export class RecipesService {
     @InjectRepository(Recipes)
     private recipeRepository: Repository<Recipes>,
     private readonly mistralService: MistralService,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(
@@ -54,8 +56,25 @@ export class RecipesService {
     };
 
     const recipe = this.recipeRepository.create(partial);
+    const savedRecipe = await this.recipeRepository.save(recipe);
 
-    return await this.recipeRepository.save(recipe);
+    // Send newsletter notification for public recipes
+    if (savedRecipe.visibility === 'public') {
+      try {
+        // Get author name (you might need to fetch the user)
+        const authorName = 'Un chef passionné'; // Placeholder - you can enhance this
+        await this.emailService.sendNewRecipeNotification(
+          savedRecipe.name,
+          savedRecipe.id,
+          authorName,
+        );
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi de la notification newsletter:', error);
+        // Don't fail the recipe creation if newsletter fails
+      }
+    }
+
+    return savedRecipe;
   }
 
   async findAll(

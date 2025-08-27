@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,7 +12,13 @@ import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '../users/user.entity';
 import { EmailService } from '../email/email.service';
-import { RegisterDto, LoginDto, ConfirmEmailDto } from './dto/auth.dto';
+import {
+  RegisterDto,
+  LoginDto,
+  ConfirmEmailDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -121,6 +128,71 @@ export class AuthService {
     await this.userRepository.save(user);
 
     return { message: 'Email confirmé avec succès' };
+  }
+
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    const { email } = forgotPasswordDto;
+
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (!user) {
+      // Pour des raisons de sécurité, on ne révèle pas si l'email existe ou non
+      return {
+        message:
+          'Si cet email est associé à un compte, un lien de réinitialisation a été envoyé.',
+      };
+    }
+
+    // Générer token de réinitialisation
+    const resetToken = uuidv4();
+    const resetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    user.passwordResetToken = resetToken;
+    user.passwordResetExpires = resetExpires;
+    await this.userRepository.save(user);
+
+    // Envoyer l'email de réinitialisation
+    await this.emailService.sendPasswordResetEmail(
+      email,
+      resetToken,
+      user.firstName,
+    );
+
+    return {
+      message: 'Un lien de réinitialisation a été envoyé à votre email.',
+    };
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const { token, newPassword } = resetPasswordDto;
+
+    const user = await this.userRepository.findOne({
+      where: { passwordResetToken: token },
+    });
+
+    if (!user || !user.passwordResetExpires) {
+      throw new BadRequestException(
+        'Token de réinitialisation invalide ou expiré',
+      );
+    }
+
+    if (user.passwordResetExpires < new Date()) {
+      throw new BadRequestException('Le token de réinitialisation a expiré');
+    }
+
+    // Hash du nouveau mot de passe
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    user.password = hashedPassword;
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
+    await this.userRepository.save(user);
+
+    return {
+      message: 'Mot de passe réinitialisé avec succès',
+    };
   }
 
   async validateUser(userId: string): Promise<User | null> {

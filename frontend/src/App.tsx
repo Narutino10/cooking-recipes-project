@@ -13,6 +13,8 @@ import Profile from './pages/Profile';
 import ChatPage from './pages/ChatPage';
 import MyRecipes from './pages/MyRecipes';
 import UpdateRecipe from './pages/UpdateRecipe';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/confirm-email" element={<ConfirmEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/my-recipes" element={<MyRecipes />} />
           <Route path="/edit-recipe/:id" element={<UpdateRecipe />} />

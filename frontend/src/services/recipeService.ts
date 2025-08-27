@@ -107,35 +107,43 @@ export const getRecipeById = async (id: string): Promise<Recipe | null> => {
   try {
     const response = await api.get(`/recipes/${id}`);
     const raw = response.data;
+    
+    // If data already has fields structure (legacy), return as is
     if (raw && raw.fields) return raw as Recipe;
-  const fields: any = {
-    Nom: raw.name ?? raw.title ?? '',
-    'Type de plat': raw.type ?? '',
-    Ingrédients: Array.isArray(raw.ingredients) ? raw.ingredients : (raw.ingredients ? String(raw.ingredients).split(',').map((s: string) => s.trim()) : []),
-    'Nombre de personnes': raw.servings ?? raw.nbPersons ?? 1,
-  Instructions: raw.instructions ?? raw.Instructions ?? raw.description ?? raw.desc ?? raw.text ?? raw.steps ?? '',
-    Intolérances: raw.intolerances ?? raw.intolerance ?? [],
-    'Analyse nutritionnelle': raw.nutrition ?? raw['Analyse nutritionnelle'] ?? [],
-  };
-  if (raw.imageUrls && Array.isArray(raw.imageUrls)) {
-    // Handle backend imageUrls array
-    fields.Image = raw.imageUrls.map((url: string) => 
-      url.startsWith('/') ? `${API_URL}${url}` : url
-    );
-  } else if (raw.imageUrl) fields.Image = raw.imageUrl;
-  else if (raw.image) fields.Image = raw.image;
-  // ensure relative urls are prefixed with API_URL
-  if (fields.Image) {
-    if (typeof fields.Image === 'string' && fields.Image.startsWith('/')) {
-      fields.Image = `${API_URL}${fields.Image}`;
+    
+    // Normalize backend data to Recipe format
+    const fields: any = {
+      Nom: raw.name ?? raw.title ?? 'Sans titre',
+      'Type de plat': raw.type ?? raw.category ?? 'Non spécifié',
+      Ingrédients: Array.isArray(raw.ingredients) 
+        ? raw.ingredients.map((ing: string) => {
+            // Remove any numbering or bullet points that might be present
+            return ing.replace(/^\d+\.?\s*/, '').replace(/^[-•*]\s*/, '').trim();
+          })
+        : (raw.ingredients ? String(raw.ingredients).split('\n').map((s: string) => s.trim()).filter(Boolean) : []),
+      'Nombre de personnes': raw.servings ?? raw.nbPersons ?? raw.servingsCount ?? 1,
+      Instructions: raw.instructions ?? raw.description ?? raw.steps ?? '',
+      Intolérances: Array.isArray(raw.intolerances) ? raw.intolerances : 
+                   (raw.intolerances ? String(raw.intolerances).split(',').map((s: string) => s.trim()) : []),
+      'Analyse nutritionnelle': raw.nutrition ?? raw.nutritionalInfo ?? [],
+      difficulty: raw.difficulty ?? null,
+      tags: Array.isArray(raw.tags) ? raw.tags : [],
+      prepTime: raw.prepTime ?? raw.preparationTime ?? null,
+      cookTime: raw.cookTime ?? raw.cookingTime ?? null,
+      calories: raw.calories ?? null,
+    };
+    
+    // Handle images
+    if (raw.imageUrls && Array.isArray(raw.imageUrls)) {
+      fields.Image = raw.imageUrls.map((url: string) => 
+        url.startsWith('/') ? `${API_URL}${url}` : url
+      );
+    } else if (raw.imageUrl) {
+      fields.Image = raw.imageUrl.startsWith('/') ? `${API_URL}${raw.imageUrl}` : raw.imageUrl;
+    } else if (raw.image) {
+      fields.Image = raw.image;
     }
-    if (Array.isArray(fields.Image)) {
-      fields.Image = fields.Image.map((it: any) => {
-        const u = (it && it.url) ? it.url : it;
-        return (typeof u === 'string' && u.startsWith('/')) ? `${API_URL}${u}` : u;
-      });
-    }
-  }
+    
     return { id: raw.id ?? raw._id ?? id, fields };
   } catch (err) {
     console.error('getRecipeById error', err);

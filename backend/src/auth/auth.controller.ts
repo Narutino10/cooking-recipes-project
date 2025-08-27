@@ -9,7 +9,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto, ConfirmEmailDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto, ConfirmEmailDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
@@ -32,6 +32,18 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto) {
     return this.authService.confirmEmail(confirmEmailDto);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 
   @Get('profile')

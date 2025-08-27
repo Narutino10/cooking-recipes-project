@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getUserRecipes, deleteRecipe } from '../services/recipeService';
+import RecipeImage from '../components/RecipeImage';
 import '../styles/pages/MyRecipes.scss';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -25,7 +26,7 @@ const MyRecipes = () => {
   };
 
   const handleEdit = (id: string) => {
-  navigate(`/edit-recipe/${id}`);
+    navigate(`/edit-recipe/${id}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -49,6 +50,17 @@ const MyRecipes = () => {
 
   const cancelDelete = () => setDeletingId(null);
 
+  // Helper function to normalize recipe data for RecipeImage component
+  const normalizeRecipeForImage = (recipe: any) => {
+    return {
+      id: recipe.id,
+      fields: {
+        Nom: recipe.name ?? recipe.fields?.Nom ?? 'Sans titre',
+        Image: recipe.imageUrls ?? recipe.fields?.Image ?? null
+      }
+    };
+  };
+
   if (!isAuthenticated) {
     return <div>Connectez-vous pour voir vos recettes.</div>;
   }
@@ -61,9 +73,24 @@ const MyRecipes = () => {
       <div className="recipe-list">
         {recipes.map((r) => (
           <div key={r.id} className="recipe-card">
+            <div className="recipe-image-container">
+              <RecipeImage 
+                recipe={normalizeRecipeForImage(r)} 
+                size="medium"
+                className="recipe-card-image"
+              />
+            </div>
             <div className="recipe-card-body">
               <div className="recipe-title">{r.name ?? r.fields?.Nom ?? 'Sans titre'}</div>
-              <div className="recipe-meta">Créé: {new Date(r.createdAt ?? r.fields?.createdAt ?? Date.now()).toLocaleString()}</div>
+              <div className="recipe-meta">
+                Créé: {new Date(r.createdAt ?? r.fields?.createdAt ?? Date.now()).toLocaleString()}
+              </div>
+              <div className="recipe-description">
+                {r.description ? 
+                  (r.description.length > 100 ? `${r.description.substring(0, 100)}...` : r.description) 
+                  : 'Aucune description'
+                }
+              </div>
               <div className="recipe-actions">
                 <button onClick={() => handleView(r.id)}>Voir</button>
                 <button onClick={() => handleEdit(r.id)}>Modifier</button>

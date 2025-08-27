@@ -74,6 +74,16 @@ export const confirmEmail = async (token: string): Promise<{ message: string }> 
   return response.data;
 };
 
+export const forgotPassword = async (data: { email: string }): Promise<{ message: string }> => {
+  const response = await api.post('/auth/forgot-password', data);
+  return response.data;
+};
+
+export const resetPassword = async (data: { token: string; newPassword: string }): Promise<{ message: string }> => {
+  const response = await api.post('/auth/reset-password', data);
+  return response.data;
+};
+
 export const logout = (): void => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');

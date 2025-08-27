@@ -190,7 +190,7 @@
             color: white;
 
             &:hover {
-              background: darken(var(--color-error), 10%);
+              background: #b91c1c;
             }
           }
 
@@ -199,7 +199,7 @@
             color: white;
 
             &:hover {
-              background: darken(var(--color-warning), 10%);
+              background: #d97706;
             }
           }
 

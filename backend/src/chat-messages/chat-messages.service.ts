@@ -20,13 +20,8 @@ export class ChatMessagesService {
     recipientId?: string,
     type: MessageType = MessageType.TEXT,
   ): Promise<ChatMessage> {
-    const sender = await this.usersRepository.findOne({
-      where: { id: senderId },
-    });
-
     const message = this.chatMessagesRepository.create({
       content,
-      sender,
       senderId,
       room,
       recipientId,

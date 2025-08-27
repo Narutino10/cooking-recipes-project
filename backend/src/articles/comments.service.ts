@@ -1,147 +1,142 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Article, ArticleType, ArticleStatus } from './article.entity';
+import { Repository, IsNull } from 'typeorm';
+import { Comment } from './comment.entity';
 import { User } from '../users/user.entity';
-import { CreateArticleDto } from './dto/create-article.dto';
-import { UpdateArticleDto } from './dto/update-article.dto';
+import { Article } from './article.entity';
 
 @Injectable()
-export class ArticlesService {
+export class CommentsService {
   constructor(
-    @InjectRepository(Article)
-    private articlesRepository: Repository<Article>,
+    @InjectRepository(Comment)
+    private commentsRepository: Repository<Comment>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Article)
+    private articlesRepository: Repository<Article>,
   ) {}
 
-  async create(createArticleDto: CreateArticleDto, userId: string): Promise<Article> {
+  async create(
+    articleId: string,
+    content: string,
+    userId: string,
+    parentCommentId?: string,
+  ): Promise<Comment> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const article = this.articlesRepository.create({
-      ...createArticleDto,
-      author: user,
-      authorId: userId,
-      publishedAt: createArticleDto.status === ArticleStatus.PUBLISHED ? new Date() : null,
-    });
-
-    return this.articlesRepository.save(article);
-  }
-
-  async findAll(type?: ArticleType, category?: string, publishedOnly = true): Promise<Article[]> {
-    const query = this.articlesRepository
-      .createQueryBuilder('article')
-      .leftJoinAndSelect('article.author', 'author')
-      .leftJoinAndSelect('article.likedBy', 'likedBy')
-      .orderBy('article.createdAt', 'DESC');
-
-    if (type) {
-      query.andWhere('article.type = :type', { type });
-    }
-
-    if (category) {
-      query.andWhere('article.category = :category', { category });
-    }
-
-    if (publishedOnly) {
-      query.andWhere('article.status = :status', { status: ArticleStatus.PUBLISHED });
-    }
-
-    return query.getMany();
-  }
-
-  async findOne(id: string): Promise<Article> {
     const article = await this.articlesRepository.findOne({
-      where: { id },
-      relations: ['author', 'comments', 'comments.author', 'likedBy'],
+      where: { id: articleId },
     });
-
     if (!article) {
       throw new NotFoundException('Article not found');
     }
 
-    // Increment view count
-    article.views += 1;
+    let parentComment: Comment | null = null;
+    if (parentCommentId) {
+      parentComment = await this.commentsRepository.findOne({
+        where: { id: parentCommentId },
+      });
+      if (!parentComment) {
+        throw new NotFoundException('Parent comment not found');
+      }
+    }
+
+    const comment = this.commentsRepository.create({
+      content,
+      articleId,
+      authorId: userId,
+      parentCommentId: parentCommentId || undefined,
+    });
+
+    const savedComment = await this.commentsRepository.save(comment);
+
+    // Increment comment count on article
+    article.commentCount += 1;
     await this.articlesRepository.save(article);
 
-    return article;
+    return savedComment;
   }
 
-  async update(id: string, updateArticleDto: UpdateArticleDto, userId: string): Promise<Article> {
-    const article = await this.findOne(id);
+  async findByArticle(articleId: string): Promise<Comment[]> {
+    return this.commentsRepository.find({
+      where: { articleId, parentCommentId: IsNull() },
+      relations: ['author', 'replies', 'replies.author', 'likedBy'],
+      order: { createdAt: 'ASC' },
+    });
+  }
 
-    if (article.authorId !== userId) {
-      throw new NotFoundException('You can only update your own articles');
+  async findOne(id: string): Promise<Comment> {
+    const comment = await this.commentsRepository.findOne({
+      where: { id },
+      relations: ['author', 'article', 'parentComment', 'replies', 'likedBy'],
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
     }
 
-    Object.assign(article, updateArticleDto);
+    return comment;
+  }
 
-    if (updateArticleDto.status === ArticleStatus.PUBLISHED && !article.publishedAt) {
-      article.publishedAt = new Date();
+  async update(id: string, content: string, userId: string): Promise<Comment> {
+    const comment = await this.findOne(id);
+
+    if (comment.authorId !== userId) {
+      throw new NotFoundException('You can only update your own comments');
     }
 
-    return this.articlesRepository.save(article);
+    comment.content = content;
+    return this.commentsRepository.save(comment);
   }
 
   async remove(id: string, userId: string): Promise<void> {
-    const article = await this.findOne(id);
+    const comment = await this.findOne(id);
 
-    if (article.authorId !== userId) {
-      throw new NotFoundException('You can only delete your own articles');
+    if (comment.authorId !== userId) {
+      throw new NotFoundException('You can only delete your own comments');
     }
 
-    await this.articlesRepository.remove(article);
+    // Decrement comment count on article
+    const article = await this.articlesRepository.findOne({
+      where: { id: comment.articleId },
+    });
+    if (article) {
+      article.commentCount -= 1;
+      await this.articlesRepository.save(article);
+    }
+
+    await this.commentsRepository.remove(comment);
   }
 
-  async likeArticle(articleId: string, userId: string): Promise<Article> {
-    const article = await this.findOne(articleId);
+  async likeComment(commentId: string, userId: string): Promise<Comment> {
+    const comment = await this.findOne(commentId);
     const user = await this.usersRepository.findOne({ where: { id: userId } });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const isLiked = article.likedBy.some(u => u.id === userId);
+    const isLiked = comment.likedBy.some((u) => u.id === userId);
 
     if (isLiked) {
-      article.likedBy = article.likedBy.filter(u => u.id !== userId);
-      article.likes -= 1;
+      comment.likedBy = comment.likedBy.filter((u) => u.id !== userId);
+      comment.likes -= 1;
     } else {
-      article.likedBy.push(user);
-      article.likes += 1;
+      comment.likedBy.push(user);
+      comment.likes += 1;
     }
 
-    return this.articlesRepository.save(article);
+    return this.commentsRepository.save(comment);
   }
 
-  async getCategories(type?: ArticleType): Promise<string[]> {
-    const query = this.articlesRepository
-      .createQueryBuilder('article')
-      .select('DISTINCT article.category')
-      .where('article.category IS NOT NULL');
-
-    if (type) {
-      query.andWhere('article.type = :type', { type });
-    }
-
-    const result = await query.getRawMany();
-    return result.map(row => row.category).filter(Boolean);
-  }
-
-  async getTags(): Promise<string[]> {
-    const articles = await this.articlesRepository.find({
-      select: ['tags'],
-      where: { status: ArticleStatus.PUBLISHED }
+  async getCommentReplies(commentId: string): Promise<Comment[]> {
+    return this.commentsRepository.find({
+      where: { parentCommentId: commentId },
+      relations: ['author', 'replies', 'replies.author', 'likedBy'],
+      order: { createdAt: 'ASC' },
     });
-
-    const allTags = articles
-      .flatMap(article => article.tags || [])
-      .filter((tag, index, array) => array.indexOf(tag) === index);
-
-    return allTags;
   }
-}</content>
-<parameter name="filePath">c:\Users\Ibrah\OneDrive\Bureau\cooking-recipes-project\backend\src\articles\articles.service.ts
+}

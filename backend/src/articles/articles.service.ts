@@ -26,10 +26,11 @@ export class ArticlesService {
 
     const article = this.articlesRepository.create({
       ...createArticleDto,
-      author: user,
       authorId: userId,
       publishedAt:
-        createArticleDto.status === ArticleStatus.PUBLISHED ? new Date() : null,
+        createArticleDto.status === ArticleStatus.PUBLISHED
+          ? new Date()
+          : undefined,
     });
 
     return this.articlesRepository.save(article);
@@ -123,7 +124,11 @@ export class ArticlesService {
     }
 
     const result = await query.getRawMany();
-    return result.map((row) => row.category).filter(Boolean);
+    return result
+      .map((row: { category: string }) => row.category)
+      .filter(
+        (category: string) => category !== null && category !== undefined,
+      );
   }
 
   async getTags(): Promise<string[]> {

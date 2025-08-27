@@ -16,13 +16,23 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ArticleType } from './article.entity';
 
+interface AuthenticatedRequest extends Request {
+  user: {
+    id: string;
+    email: string;
+  };
+}
+
 @Controller('articles')
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createArticleDto: CreateArticleDto, @Request() req) {
+  create(
+    @Body() createArticleDto: CreateArticleDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.articlesService.create(createArticleDto, req.user.id);
   }
 
@@ -56,14 +66,14 @@ export class ArticlesController {
   update(
     @Param('id') id: string,
     @Body() updateArticleDto: UpdateArticleDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.articlesService.update(id, updateArticleDto, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string, @Request() req) {
+  remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.articlesService.remove(id, req.user.id);
   }
 }

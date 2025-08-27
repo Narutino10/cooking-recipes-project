@@ -54,6 +54,11 @@ export const improveRecipe = async (
 // New functions using backend proxy for AI APIs
 export const generateRecipeWithMistral = async (data: GenerateRecipeRequest): Promise<string> => {
   try {
+    // Test endpoint first
+    console.log('Sending data to test endpoint:', data);
+    const testResponse = await axios.post(`${API_URL}/test`, data);
+    console.log('Test response:', testResponse.data);
+    
     const response = await axios.post(`${API_URL}/generate-recipe-text`, data);
     return response.data.recipeText;
   } catch (error) {

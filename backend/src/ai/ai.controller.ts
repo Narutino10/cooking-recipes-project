@@ -106,6 +106,12 @@ export class AiController {
     return await this.mistralService.generateRecipe(generateRecipeDto);
   }
 
+  @Post('test')
+  testEndpoint(@Body() body: any): { received: any; message: string } {
+    console.log('Test endpoint received:', JSON.stringify(body, null, 2));
+    return { received: body, message: 'Test successful' };
+  }
+
   @Post('generate-recipe-text')
   async generateRecipeText(
     @Body() generateRecipeTextDto: GenerateRecipeTextDto,

@@ -68,3 +68,88 @@
 .recipe-image-error {
   display: none;
 }
+
+// Image Carousel Styles
+.recipe-image-carousel {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  .image-carousel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+
+    .carousel-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .carousel-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 12px;
+    }
+
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+      z-index: 2;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.7);
+      }
+
+      &.carousel-prev {
+        left: 10px;
+      }
+
+      &.carousel-next {
+        right: 10px;
+      }
+    }
+
+    .carousel-indicators {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+
+      .indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.7);
+        }
+
+        &.active {
+          background: white;
+        }
+      }
+    }
+  }
+}

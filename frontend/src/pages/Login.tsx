@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../services/authService';
 import '../styles/pages/Login.scss';
@@ -10,6 +11,7 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { login: loginContext } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,8 +25,8 @@ const Login = () => {
 
     try {
       const response = await login(formData);
-      localStorage.setItem('token', response.accessToken);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      // Utilise le contexte Auth pour mettre à jour l'état global
+      loginContext(response.accessToken, response.user);
       navigate('/');
     } catch (error: any) {
       setError(error.response?.data?.message || 'Erreur de connexion');

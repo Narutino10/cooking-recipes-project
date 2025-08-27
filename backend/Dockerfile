@@ -5,6 +5,7 @@ WORKDIR /usr/src/app
 
 # Copy package files
 COPY package*.json ./
+RUN npm config set registry https://registry.npmjs.org/
 
 # Development stage
 FROM base AS development

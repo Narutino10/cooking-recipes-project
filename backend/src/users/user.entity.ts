@@ -7,6 +7,14 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Recipes } from '../recipes/recipes.entity';
+import { Article } from '../articles/article.entity';
+import { Comment } from '../articles/comment.entity';
+
+export enum UserRole {
+  USER = 'user',
+  MODERATOR = 'moderator',
+  ADMIN = 'admin',
+}
 
 @Entity('users')
 export class User {
@@ -25,6 +33,19 @@ export class User {
   @Column()
   lastName: string;
 
+  @Column({ nullable: true })
+  avatar: string;
+
+  @Column({ nullable: true, type: 'text' })
+  bio: string;
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER,
+  })
+  role: UserRole;
+
   @Column({ default: false })
   isEmailConfirmed: boolean;
 
@@ -39,6 +60,12 @@ export class User {
 
   @OneToMany(() => Recipes, (recipe) => recipe.author)
   recipes: Recipes[];
+
+  @OneToMany(() => Article, (article) => article.author)
+  articles: Article[];
+
+  @OneToMany(() => Comment, (comment) => comment.author)
+  comments: Comment[];
 
   @CreateDateColumn()
   createdAt: Date;

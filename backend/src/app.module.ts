@@ -10,6 +10,8 @@ import { RecipesModule } from './recipes/recipes.module';
 import { MistralModule } from './mistral/mistral.module';
 import { AiModule } from './ai/ai.module';
 import { ChatModule } from './chat/chat.module';
+import { ArticlesModule } from './articles/articles.module';
+import { ChatMessagesModule } from './chat-messages/chat-messages.module';
 import { getDatabaseConfig } from './config/database.config';
 
 @Module({
@@ -28,6 +30,8 @@ import { getDatabaseConfig } from './config/database.config';
     EmailModule,
     RecipesModule,
     ChatModule,
+    ArticlesModule,
+    ChatMessagesModule,
     MistralModule,
     AiModule,
   ],

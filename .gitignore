@@ -64,7 +64,6 @@ ssl/
 *.crt
 
 # Uploads et medias
-uploads/
 media/
 
 # Temporary files

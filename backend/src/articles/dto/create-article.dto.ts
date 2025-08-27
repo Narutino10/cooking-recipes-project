@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsEnum, IsArray, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  IsNotEmpty,
+} from 'class-validator';
 import { ArticleType, ArticleStatus } from '../article.entity';
 
 export class CreateArticleDto {

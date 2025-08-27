@@ -69,7 +69,10 @@ export class RecipesService {
           authorName,
         );
       } catch (error) {
-        console.error('Erreur lors de l\'envoi de la notification newsletter:', error);
+        console.error(
+          "Erreur lors de l'envoi de la notification newsletter:",
+          error,
+        );
         // Don't fail the recipe creation if newsletter fails
       }
     }

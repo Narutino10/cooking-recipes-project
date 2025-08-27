@@ -233,9 +233,10 @@ export class EmailService {
     }
   }
 
-  async unsubscribeFromNewsletter(
-    email: string,
-  ): Promise<{ success: boolean; message: string }> {
+  unsubscribeFromNewsletter(email: string): {
+    success: boolean;
+    message: string;
+  } {
     try {
       this.newsletterSubscribers.delete(email);
       return {

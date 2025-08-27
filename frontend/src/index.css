@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,9 +9,56 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  line-height: 1.6;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Styles globaux pour l'application */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  padding: 0;
+}
+
+/* Styles pour les boutons */
+button {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+/* Styles pour les liens */
+a {
+  color: #3498db;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #2980b9;
+}
+
+/* Styles pour les inputs */
+input, textarea, select {
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #3498db;
 }

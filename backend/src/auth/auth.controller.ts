@@ -9,7 +9,13 @@ import {
   Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto, ConfirmEmailDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
+import {
+  RegisterDto,
+  LoginDto,
+  ConfirmEmailDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')

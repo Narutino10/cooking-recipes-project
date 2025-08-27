@@ -4,8 +4,8 @@ FROM node:20.11-alpine3.19 AS base
 WORKDIR /usr/src/app
 
 # Copy package files
-COPY package*.json ./
-RUN npm config set registry https://registry.npmjs.org/
+COPY package*.jss.org/RUN npm config set registry https://registry.npmjs.org/
+
 
 # Development stage
 FROM base AS development

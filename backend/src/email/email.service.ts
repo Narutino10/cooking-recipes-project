@@ -57,8 +57,12 @@ export class EmailService {
   ): Promise<void> {
     const confirmationUrl = `${this.configService.get<string>('FRONTEND_URL')}/confirm-email?token=${token}`;
 
+    const fromEmail =
+      this.configService.get<string>('EMAIL_FROM') ||
+      'Cooking Recipes <noreply@cooking-recipes.com>';
+
     const mailOptions = {
-      from: this.configService.get<string>('EMAIL_FROM'),
+      from: fromEmail,
       to,
       subject: 'Confirmez votre inscription - Cooking Recipes',
       html: `
@@ -104,8 +108,12 @@ export class EmailService {
   ): Promise<void> {
     const resetUrl = `${this.configService.get<string>('FRONTEND_URL')}/reset-password?token=${token}`;
 
+    const fromEmail =
+      this.configService.get<string>('EMAIL_FROM') ||
+      'Cooking Recipes <noreply@cooking-recipes.com>';
+
     const mailOptions = {
-      from: this.configService.get<string>('EMAIL_FROM'),
+      from: fromEmail,
       to,
       subject: 'Réinitialisez votre mot de passe - Cooking Recipes',
       html: `

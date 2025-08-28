@@ -19,6 +19,12 @@ const GenerateRecipe = () => {
   const [generatedRecipe, setGeneratedRecipe] = useState<GeneratedRecipe | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveData, setSaveData] = useState({
+    visibility: 'public' as 'public' | 'private',
+    tags: '',
+    difficulty: 'easy' as 'easy' | 'medium' | 'hard',
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -65,31 +71,32 @@ const GenerateRecipe = () => {
     }
   };
 
-  const handleSaveRecipe = async () => {
+  const handleSaveRecipe = () => {
+    if (!generatedRecipe) return;
+    setShowSaveModal(true);
+  };
+
+  const handleConfirmSave = async () => {
     if (!generatedRecipe) return;
 
     try {
-      // Prompt user for visibility and optional metadata before saving
-      const visibility = window.prompt('Visibilité (public/private)', 'public') as 'public' | 'private';
-      const tagsInput = window.prompt('Tags (séparés par ,)', '') || '';
-      const difficulty = window.prompt('Difficulté (easy/medium/hard)', 'easy') as 'easy' | 'medium' | 'hard';
-
       const recipeData = {
         name: generatedRecipe.name,
-        type: generatedRecipe.type,
+        type: generatedRecipe.type || 'Plat principal', // Valeur par défaut si type est vide
         ingredients: generatedRecipe.ingredients,
-  servings: formData.nbPersons,
+        servings: formData.nbPersons,
         intolerances: formData.intolerances, // Déjà un tableau
         instructions: generatedRecipe.instructions,
-        visibility,
-        tags: tagsInput ? tagsInput.split(',').map(t => t.trim()) : [],
-        difficulty,
-  imageUrl: generatedRecipe.imageUrl ?? undefined,
+        visibility: saveData.visibility,
+        tags: saveData.tags ? saveData.tags.split(',').map(t => t.trim()).filter(t => t) : [],
+        difficulty: saveData.difficulty,
+        imageUrls: generatedRecipe.imageUrl ? [generatedRecipe.imageUrl] : [], // Correction: imageUrls au lieu de imageUrl
       };
 
       await createNewRecipe(recipeData);
       alert('Recette sauvegardée avec succès !');
       setGeneratedRecipe(null);
+      setShowSaveModal(false);
       setFormData({
         ingredients: '',
         nbPersons: 2,
@@ -99,10 +106,35 @@ const GenerateRecipe = () => {
         generateImage: true,
         imageStyle: 'gastronomique',
       });
-    } catch (err) {
-      alert('Erreur lors de la sauvegarde de la recette.');
-      console.error(err);
+      setSaveData({
+        visibility: 'public',
+        tags: '',
+        difficulty: 'easy',
+      });
+    } catch (err: any) {
+      // Extract backend error message for better debugging
+      let errorMessage = 'Erreur lors de la sauvegarde de la recette.';
+      if (err?.response?.data?.message) {
+        if (Array.isArray(err.response.data.message)) {
+          errorMessage = `Erreur de validation: ${err.response.data.message.join(', ')}`;
+        } else {
+          errorMessage = `Erreur: ${err.response.data.message}`;
+        }
+      } else if (err?.response?.status === 400) {
+        errorMessage = 'Erreur de validation des données. Vérifiez que tous les champs requis sont remplis.';
+      }
+      alert(errorMessage);
+      console.error('Erreur lors de la sauvegarde:', err);
     }
+  };
+
+  const handleSaveDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setSaveData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCancelSave = () => {
+    setShowSaveModal(false);
   };
 
   return (

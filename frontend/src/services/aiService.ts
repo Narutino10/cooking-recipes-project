@@ -196,6 +196,15 @@ export const generateRecipeWithImage = async (data: GenerateRecipeWithImageReque
       }
     };
 
+    // Generate nutrition analysis using the backend
+    try {
+      const nutritionData = await analyzeNutrition(recipe.ingredients);
+      recipe.nutritionAnalysis = nutritionData;
+    } catch (nutritionError) {
+      console.warn('Erreur lors de l\'analyse nutritionnelle:', nutritionError);
+      // Keep the default values if nutrition analysis fails
+    }
+
     let generatedImage: GeneratedImage | undefined;
 
     // Generate image if requested

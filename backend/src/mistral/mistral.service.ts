@@ -46,20 +46,263 @@ export class MistralService {
   }
 
   private getMockNutritionAnalysis(ingredients: string[]): NutritionAnalysis {
-    // Calculer des valeurs basées sur les ingrédients
-    const baseCalories = ingredients.length * 80;
-    const baseProteins = Math.floor(ingredients.length * 3.5);
-    const baseCarbs = Math.floor(ingredients.length * 12);
-    const baseFats = Math.floor(ingredients.length * 2.8);
+    // Analyse détaillée basée sur les ingrédients
+    const lowerIngredients = ingredients.map((ing) => ing.toLowerCase());
+
+    // Calcul des macronutriments basé sur les ingrédients
+    let baseCalories = 0;
+    let baseProteins = 0;
+    let baseCarbs = 0;
+    let baseFats = 0;
+
+    // Base nutritionnelle par ingrédient
+    const nutritionData: Record<
+      string,
+      {
+        cal: number;
+        prot: number;
+        carb: number;
+        fat: number;
+        vitamins: string[];
+        minerals: string[];
+      }
+    > = {
+      viande: {
+        cal: 250,
+        prot: 25,
+        carb: 0,
+        fat: 15,
+        vitamins: ['B12', 'B6'],
+        minerals: ['Fer', 'Zinc'],
+      },
+      poulet: {
+        cal: 165,
+        prot: 31,
+        carb: 0,
+        fat: 3.6,
+        vitamins: ['B6', 'B12'],
+        minerals: ['Phosphore', 'Sélénium'],
+      },
+      poisson: {
+        cal: 120,
+        prot: 25,
+        carb: 0,
+        fat: 2.5,
+        vitamins: ['D', 'B12'],
+        minerals: ['Iode', 'Sélénium'],
+      },
+      œuf: {
+        cal: 155,
+        prot: 13,
+        carb: 1.1,
+        fat: 11,
+        vitamins: ['D', 'B12', 'A'],
+        minerals: ['Phosphore', 'Sélénium'],
+      },
+      oeuf: {
+        cal: 155,
+        prot: 13,
+        carb: 1.1,
+        fat: 11,
+        vitamins: ['D', 'B12', 'A'],
+        minerals: ['Phosphore', 'Sélénium'],
+      },
+      riz: {
+        cal: 130,
+        prot: 2.7,
+        carb: 28,
+        fat: 0.3,
+        vitamins: ['B1', 'B6'],
+        minerals: ['Magnésium', 'Phosphore'],
+      },
+      pâtes: {
+        cal: 157,
+        prot: 5.8,
+        carb: 31,
+        fat: 0.9,
+        vitamins: ['B1', 'B2'],
+        minerals: ['Fer', 'Magnésium'],
+      },
+      pain: {
+        cal: 265,
+        prot: 9,
+        carb: 49,
+        fat: 3.2,
+        vitamins: ['B1', 'B2'],
+        minerals: ['Fer', 'Calcium'],
+      },
+      tomate: {
+        cal: 18,
+        prot: 0.9,
+        carb: 3.9,
+        fat: 0.2,
+        vitamins: ['C', 'K', 'A'],
+        minerals: ['Potassium', 'Magnésium'],
+      },
+      carotte: {
+        cal: 41,
+        prot: 0.9,
+        carb: 10,
+        fat: 0.2,
+        vitamins: ['A', 'K', 'C'],
+        minerals: ['Potassium', 'Manganèse'],
+      },
+      brocoli: {
+        cal: 34,
+        prot: 2.8,
+        carb: 7,
+        fat: 0.4,
+        vitamins: ['C', 'K', 'A'],
+        minerals: ['Calcium', 'Fer'],
+      },
+      épinard: {
+        cal: 23,
+        prot: 2.9,
+        carb: 3.6,
+        fat: 0.4,
+        vitamins: ['K', 'A', 'C'],
+        minerals: ['Fer', 'Calcium'],
+      },
+      avocat: {
+        cal: 160,
+        prot: 2,
+        carb: 8.5,
+        fat: 14.7,
+        vitamins: ['K', 'E', 'C'],
+        minerals: ['Potassium', 'Magnésium'],
+      },
+      fromage: {
+        cal: 402,
+        prot: 7,
+        carb: 1.3,
+        fat: 33,
+        vitamins: ['A', 'B12'],
+        minerals: ['Calcium', 'Phosphore'],
+      },
+      yaourt: {
+        cal: 61,
+        prot: 3.5,
+        carb: 4.7,
+        fat: 3.3,
+        vitamins: ['B12', 'B2'],
+        minerals: ['Calcium', 'Phosphore'],
+      },
+      huile: {
+        cal: 884,
+        prot: 0,
+        carb: 0,
+        fat: 100,
+        vitamins: ['E', 'K'],
+        minerals: ['Fer'],
+      },
+      beurre: {
+        cal: 717,
+        prot: 0.9,
+        carb: 0.1,
+        fat: 81,
+        vitamins: ['A', 'D'],
+        minerals: ['Calcium'],
+      },
+      sucre: {
+        cal: 387,
+        prot: 0,
+        carb: 100,
+        fat: 0,
+        vitamins: [],
+        minerals: [],
+      },
+      farine: {
+        cal: 361,
+        prot: 12,
+        carb: 76,
+        fat: 1,
+        vitamins: ['B1', 'B2'],
+        minerals: ['Fer', 'Magnésium'],
+      },
+      légumes: {
+        cal: 30,
+        prot: 1.5,
+        carb: 6,
+        fat: 0.2,
+        vitamins: ['C', 'K', 'A'],
+        minerals: ['Potassium', 'Magnésium'],
+      },
+      fruits: {
+        cal: 50,
+        prot: 1,
+        carb: 12,
+        fat: 0.3,
+        vitamins: ['C', 'A'],
+        minerals: ['Potassium'],
+      },
+    };
+
+    // Calculer la nutrition totale
+    const vitamins = new Set<string>();
+    const minerals = new Set<string>();
+
+    for (const ingredient of lowerIngredients) {
+      for (const [key, data] of Object.entries(nutritionData)) {
+        if (ingredient.includes(key)) {
+          baseCalories += data.cal;
+          baseProteins += data.prot;
+          baseCarbs += data.carb;
+          baseFats += data.fat;
+          data.vitamins.forEach((v) => vitamins.add(v));
+          data.minerals.forEach((m) => minerals.add(m));
+          break;
+        }
+      }
+    }
+
+    // Valeurs par défaut si aucun ingrédient reconnu
+    if (baseCalories === 0) {
+      baseCalories = ingredients.length * 120;
+      baseProteins = ingredients.length * 5;
+      baseCarbs = ingredients.length * 15;
+      baseFats = ingredients.length * 4;
+      ['C', 'B6', 'A'].forEach((v) => vitamins.add(v));
+      ['Potassium', 'Magnésium', 'Fer'].forEach((m) => minerals.add(m));
+    }
+
+    // Ajuster pour 4 portions (valeurs moyennes)
+    const portions = 4;
+    const caloriesPerPortion = Math.round(baseCalories / portions);
+    const proteinsPerPortion = Math.round((baseProteins / portions) * 10) / 10;
+    const carbsPerPortion = Math.round((baseCarbs / portions) * 10) / 10;
+    const fatsPerPortion = Math.round((baseFats / portions) * 10) / 10;
+
+    // Générer une description détaillée
+    const mainIngredients = ingredients.slice(0, 3).join(', ');
+    const vitaminList = Array.from(vitamins);
+    const mineralList = Array.from(minerals);
+
+    let description = `Analyse nutritionnelle détaillée pour une portion de cette recette à base de ${mainIngredients}. `;
+    description += `Cette portion apporte ${caloriesPerPortion} calories avec un équilibre de ${proteinsPerPortion}g de protéines, `;
+    description += `${carbsPerPortion}g de glucides et ${fatsPerPortion}g de lipides. `;
+
+    if (vitaminList.length > 0) {
+      description += `Riche en vitamines ${vitaminList.slice(0, 3).join(', ')}`;
+      if (vitaminList.length > 3) description += ` et autres`;
+      description += `. `;
+    }
+
+    if (mineralList.length > 0) {
+      description += `Source de minéraux essentiels comme ${mineralList.slice(0, 2).join(', ')}`;
+      if (mineralList.length > 2) description += ` et autres`;
+      description += `. `;
+    }
+
+    description += `Cette recette offre un profil nutritionnel équilibré adapté à une alimentation saine.`;
 
     return {
-      calories: baseCalories,
-      proteins: baseProteins,
-      carbohydrates: baseCarbs,
-      fats: baseFats,
-      vitamins: ['A', 'C', 'B6', 'B12'],
-      minerals: ['Fer', 'Calcium', 'Magnésium', 'Potassium'],
-      description: `Analyse nutritionnelle pour une recette avec ${ingredients.join(', ')}. Cette recette apporte ${baseCalories} calories avec un bon équilibre de macronutriments. Riche en vitamines et minéraux essentiels.`,
+      calories: caloriesPerPortion,
+      proteins: proteinsPerPortion,
+      carbohydrates: carbsPerPortion,
+      fats: fatsPerPortion,
+      vitamins: vitaminList,
+      minerals: mineralList,
+      description,
     };
   }
 

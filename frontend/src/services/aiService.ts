@@ -67,7 +67,22 @@ const translateToEnglish = (text: string): string => {
     'gourmet': 'gourmet',
     'végétarien': 'vegetarian',
     'végétalien': 'vegan',
-    'méditerranéen': 'mediterranean'
+    'méditerranéen': 'mediterranean',
+    // Additional nutrition terms
+    'Analyse nutritionnelle': 'Nutritional analysis',
+    'pour une recette avec': 'for a recipe with',
+    'Cette recette apporte': 'This recipe provides',
+    'calories': 'calories',
+    'avec un bon équilibre': 'with a good balance',
+    'de macronutriments': 'of macronutrients',
+    'Riche en vitamines': 'Rich in vitamins',
+    'et minéraux essentiels': 'and essential minerals',
+    'Protéines': 'Proteins',
+    'Glucides': 'Carbohydrates',
+    'Lipides': 'Fats',
+    'Vitamines': 'Vitamins',
+    'Minéraux': 'Minerals',
+    'Description': 'Description'
   };
 
   let translated = text;
@@ -143,11 +158,26 @@ export const generateRecipeWithImage = async (data: GenerateRecipeWithImageReque
     // First generate the recipe text with Mistral via backend
     const recipeText = await generateRecipeWithMistral(data);
 
-    // Parse the recipe text to extract components (simplified parsing)
+    // Parse the recipe text to extract components (improved parsing)
     const lines = recipeText.split('\n');
-    const name = lines.find(line => line.includes('Nom') || line.includes('recette') || line.includes('Titre')) || 'Recette générée';
-    const ingredients = lines.filter(line => line.includes('-') && (line.includes('g') || line.includes('ml') || line.includes('cuillère') || line.includes('pincée')));
-    const instructions = lines.filter(line => /^\d+\./.test(line.trim()) || line.includes('étape') || line.includes('Étape'));
+    
+    // Extract recipe name - look for the first line that starts with ** and contains the recipe name
+    const nameLine = lines.find(line => line.startsWith('**') && !line.includes('Type:') && !line.includes('Ingrédients:') && !line.includes('Instructions:') && !line.includes('Analyse'));
+    const name = nameLine ? nameLine.replace(/\*\*/g, '').trim() : 'Recette générée';
+    
+    // Extract ingredients - lines that start with - and contain measurements
+    const ingredients = lines.filter(line => 
+      line.trim().startsWith('-') && 
+      (line.includes('g') || line.includes('ml') || line.includes('cuillère') || line.includes('pincée') || line.includes('unité'))
+    );
+    
+    // Extract instructions - lines that start with numbers or contain step keywords
+    const instructions = lines.filter(line => 
+      /^\d+\./.test(line.trim()) || 
+      line.includes('étape') || 
+      line.includes('Étape') ||
+      (line.trim().length > 10 && !line.includes('**') && !line.includes('-') && !line.includes('Type:') && !line.includes('Ingrédients:') && !line.includes('Instructions:') && !line.includes('Analyse'))
+    );
 
     // Create the recipe object
     const recipe: GeneratedRecipe = {

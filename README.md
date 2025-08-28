@@ -7,9 +7,10 @@ Une plateforme moderne et complète de gestion de recettes avec intelligence art
 Plateforme fullstack de recettes de cuisine avec :
 - **Backend NestJS** avec authentification JWT et base de données PostgreSQL
 - **Frontend React** moderne avec TypeScript et SCSS
-- **Intelligence Artificielle** Mistral pour la génération automatique
+- **Intelligence Artificielle** Mistral + Stability AI pour génération de texte et d'images
 - **Système d'utilisateurs** complet avec profils personnalisables
 - **Fonctionnalités sociales** : avis, notes et partage de recettes
+- **Génération d'images IA** : Images culinaires professionnelles avec Stability AI
 
 ## 🎯 Fonctionnalités Principales
 
@@ -28,16 +29,34 @@ Plateforme fullstack de recettes de cuisine avec :
 - ✅ **Filtrage intelligent** : Par tags, allergènes, calories
 
 ### 🤖 Intelligence Artificielle
-- ✅ **Génération automatique** : Recettes créées par Mistral AI
-- ✅ **Analyse nutritionnelle** : Calcul automatique des valeurs
+- ✅ **Génération automatique de recettes** : Recettes créées par Mistral AI
+- ✅ **Analyse nutritionnelle intelligente** : Calcul automatique des valeurs
+- ✅ **Génération d'images culinaires** : Images professionnelles avec Stability AI
+- ✅ **Traduction automatique** : Prompts traduits en anglais pour l'IA
 - ✅ **Personnalisation IA** : Basée sur les préférences utilisateur
 - ✅ **Suggestions intelligentes** : Recettes adaptées aux intolérances
+- ✅ **Parsing avancé** : Extraction précise des composants de recette
 
 ### ⭐ Fonctionnalités Sociales (En développement)
 - 🚧 **Système de notation** : Notes en étoiles (1-5)
 - 🚧 **Avis et commentaires** : Feedback détaillé sur les recettes
 - 🚧 **Partage social** : Partage de recettes entre utilisateurs
 - 🚧 **Recettes favorites** : Sauvegarde des recettes appréciées
+
+## 🔧 Dernières Améliorations (Août 2025)
+
+### ✅ Corrections Récentes
+- **🖼️ Intégration Stability AI** : Génération d'images culinaires professionnelles
+- **🌍 Traduction automatique** : Prompts français → anglais pour l'IA
+- **🔍 Parsing amélioré** : Extraction précise du nom de recette
+- **⚡ Performance optimisée** : Réduction des temps de réponse IA
+- **🐛 Corrections de bugs** : Gestion d'erreurs robuste et logging détaillé
+
+### 🎯 Nouvelles Fonctionnalités IA
+- **Génération de recettes avec images** : Workflow complet texte + image
+- **Prompt engineering avancé** : Prompts optimisés pour meilleurs résultats
+- **Gestion multilingue** : Support français avec traduction automatique
+- **Cache intelligent** : Réduction des appels API redondants
 
 ## 🏗️ Architecture Technique
 
@@ -49,8 +68,12 @@ backend/
 │   ├── users/             # Gestion des utilisateurs
 │   ├── recipes/           # CRUD recettes avec relations
 │   ├── reviews/           # Système d'avis et notes
-│   ├── ai/                # Contrôleur IA (Mistral)
+│   ├── ai/                # Contrôleur IA (Mistral + Stability)
 │   ├── mistral/           # Service d'intégration Mistral AI
+│   │   ├── mistral.service.ts    # Génération texte + parsing
+│   │   ├── mistral.module.ts     # Module IA
+│   │   └── translatePromptToEnglish() # Traduction automatique
+│   ├── stability/         # Service Stability AI (Images)
 │   ├── airtable/          # Service legacy Airtable
 │   ├── mail/              # Service d'envoi d'emails
 │   └── database/          # Migrations et seeds
@@ -73,12 +96,15 @@ frontend/
 │   │   ├── Profile.tsx    # Profil utilisateur
 │   │   ├── ConfirmEmail.tsx # Confirmation email
 │   │   ├── CreateRecipe.tsx # Création de recette
-│   │   ├── GenerateRecipe.tsx # Génération IA
+│   │   ├── GenerateRecipe.tsx # Génération IA avec images
 │   │   └── RecipeDetail.tsx # Détail de recette
 │   ├── services/         # Services API
 │   │   ├── authService.ts # Authentification
 │   │   ├── recipeService.ts # Gestion recettes
 │   │   └── aiService.ts   # Intelligence artificielle
+│   │       ├── generateRecipeWithImage() # Workflow complet
+│   │       ├── translateToEnglish()      # Traduction frontend
+│   │       └── generateImageWithStability() # Intégration images
 │   ├── types/            # Interfaces TypeScript
 │   └── styles/           # Styles SCSS modulaires
 ├── Dockerfile            # Multi-stage pour production
@@ -162,8 +188,14 @@ MAIL_PORT=587
 MAIL_USER=your-email@gmail.com
 MAIL_PASSWORD=your-app-password
 
-# IA Mistral
+# IA Mistral (Texte)
 MISTRAL_API_KEY=your-mistral-api-key
+MISTRAL_IMAGE_API_URL=https://api.mistral.ai/v1/images
+
+# IA Stability (Images)
+STABILITY_API_KEY=your-stability-api-key
+STABILITY_API_URL=https://api.stability.ai/v2beta/stable-image/generate/core
+IMAGE_API_PROVIDER=stability
 
 # Legacy Airtable
 AIRTABLE_API_TOKEN=your-airtable-token
@@ -224,7 +256,8 @@ REACT_APP_APP_NAME=Cooking Recipes Platform
 - **🛡️ Passport JWT** : Authentification sécurisée
 - **🗄️ TypeORM** : ORM pour PostgreSQL
 - **📧 Nodemailer** : Envoi d'emails
-- **🤖 Mistral AI** : Intelligence artificielle
+- **🤖 Mistral AI** : Génération de texte et recettes
+- **🎨 Stability AI** : Génération d'images culinaires
 - **🐳 Docker** : Conteneurisation multi-stage
 
 ### Frontend
@@ -431,10 +464,67 @@ copies or substantial portions of the Software.
 ```
 
 ### Crédits
-- **Mistral AI** : Génération intelligente de recettes
+- **Mistral AI** : Génération intelligente de recettes et texte
+- **Stability AI** : Génération d'images culinaires professionnelles
 - **Airtable** : Base de données legacy
 - **Unsplash** : Images de recettes libres de droits
 - **Icons8** : Iconographie interface utilisateur
+
+## 🛠️ Bonnes Pratiques IA & Debugging
+
+### 🔧 Résolution des Problèmes Courants
+
+#### Erreur 500 - Stability AI
+```bash
+# Vérifier les logs du backend
+docker logs cooking-recipes-backend --tail 20
+
+# Vérifier la clé API Stability
+echo $STABILITY_API_KEY
+
+# Tester l'endpoint directement
+curl -X POST http://localhost:3001/ai/generate-image \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "A beautiful culinary dish"}'
+```
+
+#### Parsing de Recette Incorrect
+- **Problème** : Le nom extrait est la description nutritionnelle
+- **Solution** : Vérifier le parsing dans `aiService.ts`
+- **Debug** : Consulter les logs frontend pour voir l'extraction
+
+#### Traduction Non Fonctionnelle
+- **Problème** : Prompts encore en français
+- **Solution** : Vérifier les fonctions `translateToEnglish()`
+- **Debug** : Logs montrent "Original prompt" vs "Translated prompt"
+
+### 🎯 Optimisations IA
+
+#### Prompt Engineering
+```typescript
+// Bon prompt pour Stability AI
+const prompt = `Professional culinary photograph of ${dishName}, 
+gourmet presentation, natural lighting, food photography style`;
+
+// Éviter les prompts trop longs
+const cleanPrompt = prompt.substring(0, 500);
+```
+
+#### Gestion des Erreurs
+```typescript
+try {
+  const image = await generateImage(prompt);
+} catch (error) {
+  console.error('IA Error:', error.message);
+  // Fallback vers image par défaut
+  return defaultImage;
+}
+```
+
+#### Cache et Performance
+- **Cache des résultats** : Éviter les appels répétés
+- **Limite de taux** : Respecter les quotas API
+- **Timeout approprié** : 30s pour Stability AI
 
 ## 🔗 Liens Utiles et Documentation
 
@@ -442,7 +532,8 @@ copies or substantial portions of the Software.
 - [NestJS Official Docs](https://docs.nestjs.com/) - Framework backend
 - [React Documentation](https://react.dev/) - Framework frontend
 - [TypeORM Guide](https://typeorm.io/) - ORM pour PostgreSQL
-- [Mistral AI API](https://docs.mistral.ai/) - Intelligence artificielle
+- [Mistral AI API](https://docs.mistral.ai/) - Intelligence artificielle texte
+- [Stability AI API](https://platform.stability.ai/docs/api-reference) - Génération d'images
 - [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
 
 ### 🛠️ Outils de Développement
@@ -464,17 +555,94 @@ copies or substantial portions of the Software.
 **Cooking Recipes Platform** est bien plus qu'une simple application de recettes. C'est un écosystème complet qui combine :
 
 - 🚀 **Technologies modernes** et performantes
-- 🤖 **Intelligence artificielle** pour l'innovation
+- 🤖 **Intelligence artificielle avancée** : Mistral + Stability AI
+- 🎨 **Génération d'images professionnelles** : Photos culinaires IA
+- 🌍 **Support multilingue** : Français avec traduction automatique
 - 👥 **Fonctionnalités sociales** pour la communauté  
 - 🎨 **Design épuré** pour l'expérience utilisateur
 - 🔒 **Sécurité robuste** pour la confiance
 - 📱 **Vision mobile** pour l'accessibilité
+- 🛠️ **Debugging avancé** et gestion d'erreurs
 
-### 🌟 *"Cuisiner n'a jamais été aussi intelligent et social !"* 
+### 🌟 *"Cuisiner n'a jamais été aussi intelligent, visuel et social !"*
 
 ---
 
 **Dernière mise à jour** : Août 2025 | **Version** : 1.1.0 | **Status** : ✅ Active Development
+
+### 🎯 Fonctionnalités Clés Implémentées
+- ✅ Authentification JWT complète
+- ✅ Génération de recettes IA (Mistral)
+- ✅ Génération d'images culinaires (Stability AI)
+- ✅ Traduction automatique français → anglais
+- ✅ Parsing avancé des réponses IA
+- ✅ Interface utilisateur moderne et responsive
+- ✅ Architecture microservices avec Docker
+
+## 🛠️ Commandes de Maintenance et Debug
+
+### Docker Management
+```bash
+# Redémarrer les services
+docker-compose restart
+
+# Redémarrer uniquement le backend
+docker-compose restart backend
+
+# Voir les logs en temps réel
+docker-compose logs -f
+
+# Voir les logs d'un service spécifique
+docker-compose logs -f backend
+
+# Nettoyer les conteneurs arrêtés
+docker-compose down
+docker system prune -f
+```
+
+### Base de Données
+```bash
+# Accéder à PostgreSQL
+docker exec -it cooking-recipes-db psql -U cooking_user -d cooking_recipes
+
+# Supprimer tous les utilisateurs (reset)
+docker exec -it cooking-recipes-db psql -U cooking_user -d cooking_recipes -c "DELETE FROM users;"
+
+# Voir les tables existantes
+docker exec -it cooking-recipes-db psql -U cooking_user -d cooking_recipes -c "\dt"
+
+# Backup de la base
+docker exec cooking-recipes-db pg_dump -U cooking_user cooking_recipes > backup.sql
+```
+
+### Tests et Validation
+```bash
+# Tests backend
+cd backend && npm run test:e2e
+
+# Tests frontend
+cd frontend && npm test
+
+# Validation des API
+curl http://localhost:3001/ai/test
+curl http://localhost:3001/auth/profile -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Monitoring des Performances
+```bash
+# Utilisation CPU/Mémoire des conteneurs
+docker stats
+
+# Logs d'erreur spécifiques
+docker logs cooking-recipes-backend 2>&1 | grep -i error
+
+# Vérification des variables d'environnement
+docker exec cooking-recipes-backend env | grep -E "(MISTRAL|STABILITY|JWT)"
+```
+
+---
+
+*Documentation mise à jour le 28 Août 2025 - Version 1.1.0*
 
 Suppression User:
 docker exec -it cooking-recipes-db psql -U cooking_user -d cooking_recipes -c "DELETE FROM users;"

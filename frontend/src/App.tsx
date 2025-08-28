@@ -23,6 +23,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import LegalMentions from './pages/LegalMentions';
 import Admin from './pages/Admin';
+import RatingDisplay from './components/RatingDisplay';
 
 function App() {
   return (

@@ -106,7 +106,16 @@ export class RatingService {
       rating.comment = comment;
     }
 
-    return this.ratingRepository.save(rating);
+    const updatedRating = await this.ratingRepository.save(rating);
+
+    // Transform user data to include combined name
+    if (updatedRating.user) {
+      Object.assign(updatedRating.user, {
+        name: `${updatedRating.user.firstName} ${updatedRating.user.lastName}`,
+      });
+    }
+
+    return updatedRating;
   }
 
   async deleteRating(id: string, userId: string): Promise<void> {
@@ -127,18 +136,38 @@ export class RatingService {
   }
 
   async getRecipeRatings(recipeId: string): Promise<Rating[]> {
-    return this.ratingRepository.find({
+    const ratings = await this.ratingRepository.find({
       where: { recipeId },
       relations: ['user'],
       order: { createdAt: 'DESC' },
     });
+
+    // Transform user data to include combined name
+    return ratings.map((rating) => {
+      if (rating.user) {
+        Object.assign(rating.user, {
+          name: `${rating.user.firstName} ${rating.user.lastName}`,
+        });
+      }
+      return rating;
+    });
   }
 
   async getUserRatings(userId: string): Promise<Rating[]> {
-    return this.ratingRepository.find({
+    const ratings = await this.ratingRepository.find({
       where: { userId },
       relations: ['recipe'],
       order: { createdAt: 'DESC' },
+    });
+
+    // Transform user data to include combined name (though user is the same for all ratings)
+    return ratings.map((rating) => {
+      if (rating.user) {
+        Object.assign(rating.user, {
+          name: `${rating.user.firstName} ${rating.user.lastName}`,
+        });
+      }
+      return rating;
     });
   }
 

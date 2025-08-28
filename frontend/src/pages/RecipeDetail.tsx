@@ -4,13 +4,25 @@ import { getRecipeById } from '../services/recipeService';
 import { Recipe } from '../types/recipe.type';
 import { getIngredientsFromRecipe, getIntolerancesFromRecipe } from '../utils/recipeUtils';
 import RecipeImage from '../components/RecipeImage';
+import RatingForm from '../components/RatingForm';
+import RatingDisplay from '../components/RatingDisplay';
+import { ratingService, Rating, RatingStats } from '../services/ratingService';
+import { useAuth } from '../hooks/useAuth';
 import '../styles/pages/RecipeDetail.scss';
 
 const RecipeDetail = () => {
   const { id } = useParams();
+  const { isAuthenticated, user } = useAuth();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // État pour les ratings
+  const [ratings, setRatings] = useState<Rating[]>([]);
+  const [ratingStats, setRatingStats] = useState<RatingStats>({ average: 0, count: 0 });
+  const [userRating, setUserRating] = useState<Rating | null>(null);
+  const [ratingsLoading, setRatingsLoading] = useState(false);
+  const [showRatingForm, setShowRatingForm] = useState(false);
 
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -28,6 +40,78 @@ const RecipeDetail = () => {
     };
     fetchRecipe();
   }, [id]);
+
+  // Charger les ratings quand la recette est chargée
+  useEffect(() => {
+    if (recipe?.id) {
+      loadRatings();
+    }
+  }, [recipe?.id, isAuthenticated, user?.id]);
+
+  const loadRatings = async () => {
+    if (!recipe?.id) return;
+
+    setRatingsLoading(true);
+    try {
+      const [ratingsData, statsData] = await Promise.all([
+        ratingService.getRecipeRatings(recipe.id),
+        ratingService.getRecipeAverageRating(recipe.id),
+      ]);
+
+      setRatings(ratingsData);
+      setRatingStats(statsData);
+
+      // Charger le rating de l'utilisateur connecté
+      if (isAuthenticated && user?.id) {
+        const userRatingData = await ratingService.getUserRatingForRecipe(recipe.id);
+        setUserRating(userRatingData);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des ratings:', error);
+    } finally {
+      setRatingsLoading(false);
+    }
+  };
+
+  const handleRatingSubmit = async (rating: number, comment: string) => {
+    if (!recipe?.id || !user?.id) return;
+
+    try {
+      if (userRating) {
+        // Modifier le rating existant
+        await ratingService.updateRating(userRating.id, { rating, comment });
+      } else {
+        // Créer un nouveau rating
+        await ratingService.createRating({ rating, comment, recipeId: recipe.id });
+      }
+
+      // Recharger les ratings
+      await loadRatings();
+      setShowRatingForm(false);
+    } catch (error: any) {
+      console.error('Erreur lors de la soumission du rating:', error);
+      alert(error?.response?.data?.message || 'Erreur lors de la soumission de votre avis');
+    }
+  };
+
+  const handleEditRating = (rating: Rating) => {
+    setUserRating(rating);
+    setShowRatingForm(true);
+  };
+
+  const handleDeleteRating = async (ratingId: string) => {
+    if (!user?.id) return;
+
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer votre avis ?')) {
+      try {
+        await ratingService.deleteRating(ratingId);
+        await loadRatings();
+      } catch (error: any) {
+        console.error('Erreur lors de la suppression du rating:', error);
+        alert(error?.response?.data?.message || 'Erreur lors de la suppression de votre avis');
+      }
+    }
+  };
 
   if (loading) return <div>Chargement...</div>;
   if (error) return <div className="error">{error}</div>;
@@ -140,6 +224,60 @@ const RecipeDetail = () => {
               </div>
             </div>
           )}
+
+          {/* Section des avis et commentaires */}
+          <section className="section ratings-section">
+            <h3>⭐ Avis et commentaires</h3>
+
+            {/* Affichage des statistiques et avis existants */}
+            <RatingDisplay
+              ratings={ratings}
+              stats={ratingStats}
+              onEditRating={handleEditRating}
+              onDeleteRating={handleDeleteRating}
+              currentUserId={user?.id}
+            />
+
+            {/* Formulaire de notation pour les utilisateurs connectés */}
+            {isAuthenticated && (
+              <div className="rating-form-container">
+                {!userRating && !showRatingForm && (
+                  <button
+                    className="add-rating-btn"
+                    onClick={() => setShowRatingForm(true)}
+                  >
+                    ✍️ Donner mon avis
+                  </button>
+                )}
+
+                {(userRating || showRatingForm) && (
+                  <div className="rating-form-wrapper">
+                    <RatingForm
+                      recipeId={recipe.id}
+                      onRatingSubmit={handleRatingSubmit}
+                      existingRating={userRating}
+                    />
+                    <button
+                      className="cancel-rating-btn"
+                      onClick={() => {
+                        setShowRatingForm(false);
+                        setUserRating(null);
+                      }}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Message pour les utilisateurs non connectés */}
+            {!isAuthenticated && (
+              <div className="login-prompt">
+                <p>🔒 Connectez-vous pour donner votre avis sur cette recette !</p>
+              </div>
+            )}
+          </section>
         </div>
 
         <aside className="recipe-aside">

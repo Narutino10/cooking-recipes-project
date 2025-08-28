@@ -1,18 +1,6 @@
 import React from 'react';
 import './RatingDisplay.scss';
-
-interface Rating {
-  id: string;
-  rating: number;
-  comment: string;
-  userId: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  createdAt: string;
-}
+import { Rating } from '../services/ratingService';
 
 interface RatingStats {
   average: number;
@@ -56,7 +44,8 @@ const RatingDisplay: React.FC<RatingDisplayProps> = ({
     ));
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined) => {
+    if (!name) return 'U'; // Default to 'U' for unknown user
     return name
       .split(' ')
       .map(word => word.charAt(0))
@@ -115,10 +104,10 @@ const RatingDisplay: React.FC<RatingDisplayProps> = ({
               <div className="rating-header">
                 <div className="user-info">
                   <div className="user-avatar">
-                    {getInitials(rating.user.name)}
+                    {getInitials(rating.user?.name)}
                   </div>
                   <div className="user-details">
-                    <span className="user-name">{rating.user.name}</span>
+                    <span className="user-name">{rating.user?.name || 'Utilisateur anonyme'}</span>
                     <span className="rating-date">
                       {formatDate(rating.createdAt)}
                     </span>

@@ -20,6 +20,11 @@ export interface UpdateRatingDto {
   comment?: string;
 }
 
+interface RatingQueryResult {
+  average: string | null;
+  count: string | null;
+}
+
 @Injectable()
 export class RatingService {
   constructor(
@@ -140,15 +145,15 @@ export class RatingService {
   async getRecipeAverageRating(
     recipeId: string,
   ): Promise<{ average: number; count: number }> {
-    const result = await this.ratingRepository
+    const result: RatingQueryResult | undefined = await this.ratingRepository
       .createQueryBuilder('rating')
       .select('AVG(rating.rating)', 'average')
       .addSelect('COUNT(rating.id)', 'count')
       .where('rating.recipeId = :recipeId', { recipeId })
       .getRawOne();
 
-    const average = result?.average ? parseFloat(String(result.average)) : 0;
-    const count = result?.count ? parseInt(String(result.count)) : 0;
+    const average = result?.average ? parseFloat(result.average) : 0;
+    const count = result?.count ? parseInt(result.count, 10) : 0;
 
     return {
       average,

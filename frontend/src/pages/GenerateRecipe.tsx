@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { generateRecipeWithImage } from '../services/aiService';
 import { GeneratedRecipe } from '../types/ai.type';
 import { createNewRecipe } from '../services/recipeService';
@@ -25,6 +25,8 @@ const GenerateRecipe = () => {
     tags: '',
     difficulty: 'easy' as 'easy' | 'medium' | 'hard',
   });
+  const [weeklyGenerations, setWeeklyGenerations] = useState(0);
+  const [maxGenerations] = useState(7); // Limite de 7 générations par semaine
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -34,8 +36,58 @@ const GenerateRecipe = () => {
     setFormData({ ...formData, intolerances });
   };
 
+  // Gestion de la limitation des générations
+  const getWeekStart = (date: Date) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Lundi comme début de semaine
+    return new Date(d.setDate(diff));
+  };
+
+  const loadWeeklyGenerations = () => {
+    const stored = localStorage.getItem('weeklyGenerations');
+    if (stored) {
+      const data = JSON.parse(stored);
+      const weekStart = getWeekStart(new Date());
+      const storedWeekStart = new Date(data.weekStart);
+
+      if (storedWeekStart.getTime() === weekStart.getTime()) {
+        setWeeklyGenerations(data.count);
+      } else {
+        // Nouvelle semaine, reset du compteur
+        setWeeklyGenerations(0);
+        localStorage.setItem('weeklyGenerations', JSON.stringify({
+          count: 0,
+          weekStart: weekStart.toISOString()
+        }));
+      }
+    }
+  };
+
+  const incrementWeeklyGenerations = () => {
+    const newCount = weeklyGenerations + 1;
+    setWeeklyGenerations(newCount);
+    const weekStart = getWeekStart(new Date());
+    localStorage.setItem('weeklyGenerations', JSON.stringify({
+      count: newCount,
+      weekStart: weekStart.toISOString()
+    }));
+  };
+
+  // Charger les données au montage du composant
+  useEffect(() => {
+    loadWeeklyGenerations();
+  }, []);
+
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Vérifier la limite de générations
+    if (weeklyGenerations >= maxGenerations) {
+      setError(`Vous avez atteint la limite de ${maxGenerations} générations par semaine. Revenez la semaine prochaine !`);
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
 
@@ -53,6 +105,10 @@ const GenerateRecipe = () => {
         generateImage: formData.generateImage,
         imageStyle: formData.imageStyle,
       });
+      
+      // Incrémenter le compteur de générations
+      incrementWeeklyGenerations();
+      
       setGeneratedRecipe(recipe);
     } catch (err: any) {
       // Axios error: try to extract backend message
@@ -139,7 +195,33 @@ const GenerateRecipe = () => {
 
   return (
     <div className="generate-recipe">
-      <h1>Générer une recette avec l'IA</h1>
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h1>Générer une recette avec l'IA</h1>
+        <div style={{
+          background: weeklyGenerations >= maxGenerations ? 'rgba(231, 76, 60, 0.1)' : 'rgba(52, 152, 219, 0.1)',
+          border: `2px solid ${weeklyGenerations >= maxGenerations ? '#e74c3c' : '#3498db'}`,
+          borderRadius: '20px',
+          padding: '1rem',
+          margin: '1rem auto',
+          maxWidth: '400px',
+          fontSize: '0.9rem',
+          fontWeight: '500'
+        }}>
+          <div style={{ marginBottom: '0.5rem' }}>
+            {weeklyGenerations >= maxGenerations ? '🚫' : '⚡'} 
+            Générations cette semaine: {weeklyGenerations}/{maxGenerations}
+          </div>
+          {weeklyGenerations < maxGenerations ? (
+            <div style={{ color: '#27ae60', fontSize: '0.8rem' }}>
+              {maxGenerations - weeklyGenerations} génération{maxGenerations - weeklyGenerations > 1 ? 's' : ''} restante{maxGenerations - weeklyGenerations > 1 ? 's' : ''}
+            </div>
+          ) : (
+            <div style={{ color: '#e74c3c', fontSize: '0.8rem' }}>
+              Limite atteinte - Revenez la semaine prochaine !
+            </div>
+          )}
+        </div>
+      </div>
       
       <form onSubmit={handleGenerate}>
         <div className="form-group">
@@ -230,8 +312,17 @@ const GenerateRecipe = () => {
           </div>
         )}
 
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Génération en cours...' : 'Générer la recette'}
+        <button 
+          type="submit" 
+          disabled={isLoading || weeklyGenerations >= maxGenerations}
+          style={{
+            opacity: (isLoading || weeklyGenerations >= maxGenerations) ? 0.6 : 1,
+            cursor: (isLoading || weeklyGenerations >= maxGenerations) ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {isLoading ? 'Génération en cours...' : 
+           weeklyGenerations >= maxGenerations ? 'Limite atteinte' : 
+           'Générer la recette'}
         </button>
       </form>
 
@@ -311,6 +402,134 @@ const GenerateRecipe = () => {
               </button>
               <button onClick={() => setGeneratedRecipe(null)} className="cancel-button">
                 Générer une nouvelle recette
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save Recipe Modal */}
+      {showSaveModal && (
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '8px',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
+            <h3 style={{ marginTop: 0, color: '#333' }}>Sauvegarder la recette</h3>
+            
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Visibilité :
+              </label>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="public"
+                    checked={saveData.visibility === 'public'}
+                    onChange={handleSaveDataChange}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Publique
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="private"
+                    checked={saveData.visibility === 'private'}
+                    onChange={handleSaveDataChange}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Privée
+                </label>
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Difficulté :
+              </label>
+              <select
+                name="difficulty"
+                value={saveData.difficulty}
+                onChange={handleSaveDataChange}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '1rem'
+                }}
+              >
+                <option value="easy">Facile</option>
+                <option value="medium">Moyen</option>
+                <option value="hard">Difficile</option>
+              </select>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Tags (séparés par des virgules) :
+              </label>
+              <input
+                type="text"
+                name="tags"
+                value={saveData.tags}
+                onChange={handleSaveDataChange}
+                placeholder="ex: rapide, végétarien, dessert"
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '1rem'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={handleCancelSave}
+                style={{
+                  padding: '0.5rem 1rem',
+                  border: '1px solid #ddd',
+                  backgroundColor: '#f5f5f5',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleConfirmSave}
+                style={{
+                  padding: '0.5rem 1rem',
+                  border: 'none',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Sauvegarder
               </button>
             </div>
           </div>

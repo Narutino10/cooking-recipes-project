@@ -112,10 +112,6 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Link to="/generate" className="nav-link" onClick={closeMobile}>
-                <span className="nav-icon">🤖</span>
-                Générer avec IA
-              </Link>
               <Link to="/forum" className="nav-link" onClick={closeMobile}>
                 <span className="nav-icon">💬</span>
                 Forum

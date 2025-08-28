@@ -1,0 +1,399 @@
+.rating-display {
+  .rating-stats {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+
+    .stats-main {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+
+      .average-rating {
+        text-align: center;
+        min-width: 120px;
+
+        .average-number {
+          display: block;
+          font-size: 3rem;
+          font-weight: 700;
+          color: #2c3e50;
+          margin-bottom: 0.5rem;
+          background: linear-gradient(45deg, #667eea, #764ba2);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .stars-container {
+          .star {
+            font-size: 1.2rem;
+            margin: 0 0.1rem;
+          }
+        }
+      }
+
+      .stats-info {
+        flex: 1;
+
+        .total-ratings {
+          display: block;
+          font-size: 1.1rem;
+          color: #34495e;
+          font-weight: 600;
+          margin-bottom: 1rem;
+        }
+
+        .rating-distribution {
+          .distribution-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+
+            .star-count {
+              min-width: 30px;
+              font-size: 0.9rem;
+              color: #7f8c8d;
+              font-weight: 500;
+            }
+
+            .bar-container {
+              flex: 1;
+              height: 8px;
+              background: #e9ecef;
+              border-radius: 4px;
+              overflow: hidden;
+
+              .bar-fill {
+                height: 100%;
+                background: linear-gradient(45deg, #f39c12, #e67e22);
+                border-radius: 4px;
+                transition: width 0.3s ease;
+              }
+            }
+
+            .count-text {
+              min-width: 20px;
+              font-size: 0.8rem;
+              color: #95a5a6;
+              text-align: right;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .ratings-list {
+    h4 {
+      margin: 0 0 1.5rem 0;
+      color: #2c3e50;
+      font-size: 1.3rem;
+      font-weight: 600;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .no-ratings {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+      p {
+        margin: 0;
+        color: #7f8c8d;
+        font-size: 1.1rem;
+        font-style: italic;
+      }
+    }
+
+    .rating-item {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+
+      .rating-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+
+        .user-info {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+
+          .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+          }
+
+          .user-details {
+            .user-name {
+              display: block;
+              font-weight: 600;
+              color: #2c3e50;
+              margin-bottom: 0.25rem;
+            }
+
+            .rating-date {
+              display: block;
+              font-size: 0.8rem;
+              color: #95a5a6;
+            }
+          }
+        }
+
+        .rating-stars {
+          .star {
+            font-size: 1rem;
+            margin: 0 0.1rem;
+          }
+        }
+      }
+
+      .rating-comment {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+
+        p {
+          margin: 0;
+          color: #34495e;
+          line-height: 1.5;
+          font-size: 0.95rem;
+        }
+      }
+
+      .rating-actions {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+
+        button {
+          background: none;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 20px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 500;
+          transition: all 0.3s ease;
+
+          &.edit-btn {
+            color: #3498db;
+            border: 1px solid #3498db;
+
+            &:hover {
+              background: #3498db;
+              color: white;
+            }
+          }
+
+          &.delete-btn {
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+
+            &:hover {
+              background: #e74c3c;
+              color: white;
+            }
+          }
+
+          &:active {
+            transform: scale(0.95);
+          }
+        }
+      }
+    }
+  }
+
+  .star {
+    color: #ddd;
+    transition: color 0.3s ease;
+
+    &.filled {
+      color: #f39c12;
+    }
+
+    &.small {
+      font-size: 0.9rem;
+    }
+
+    &.medium {
+      font-size: 1.1rem;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .rating-display {
+    .rating-stats {
+      padding: 1.5rem;
+
+      .stats-main {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+
+        .average-rating {
+          .average-number {
+            font-size: 2.5rem;
+          }
+        }
+
+        .stats-info {
+          .rating-distribution {
+            .distribution-bar {
+              gap: 0.5rem;
+
+              .star-count {
+                min-width: 25px;
+                font-size: 0.8rem;
+              }
+
+              .count-text {
+                min-width: 15px;
+                font-size: 0.75rem;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .ratings-list {
+      h4 {
+        font-size: 1.1rem;
+      }
+
+      .rating-item {
+        padding: 1rem;
+
+        .rating-header {
+          flex-direction: column;
+          gap: 1rem;
+          align-items: flex-start;
+
+          .user-info {
+            .user-avatar {
+              width: 40px;
+              height: 40px;
+            }
+          }
+
+          .rating-stars {
+            align-self: flex-end;
+          }
+        }
+
+        .rating-comment {
+          p {
+            font-size: 0.9rem;
+          }
+        }
+
+        .rating-actions {
+          justify-content: center;
+
+          button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .rating-display {
+    .rating-stats {
+      padding: 1rem;
+
+      .stats-main {
+        .average-rating {
+          .average-number {
+            font-size: 2rem;
+          }
+        }
+
+        .stats-info {
+          .total-ratings {
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+
+    .ratings-list {
+      .rating-item {
+        padding: 0.75rem;
+
+        .rating-header {
+          .user-info {
+            gap: 0.5rem;
+
+            .user-avatar {
+              width: 35px;
+              height: 35px;
+            }
+
+            .user-details {
+              .user-name {
+                font-size: 0.9rem;
+              }
+
+              .rating-date {
+                font-size: 0.75rem;
+              }
+            }
+          }
+
+          .rating-stars {
+            .star {
+              font-size: 0.9rem;
+            }
+          }
+        }
+
+        .rating-comment {
+          p {
+            font-size: 0.85rem;
+          }
+        }
+      }
+    }
+  }
+}

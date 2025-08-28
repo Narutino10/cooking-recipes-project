@@ -12,6 +12,7 @@ import { AiModule } from './ai/ai.module';
 import { ChatModule } from './chat/chat.module';
 import { ArticlesModule } from './articles/articles.module';
 import { ChatMessagesModule } from './chat-messages/chat-messages.module';
+import { RatingModule } from './rating/rating.module';
 import { getDatabaseConfig } from './config/database.config';
 
 @Module({
@@ -32,6 +33,7 @@ import { getDatabaseConfig } from './config/database.config';
     ChatModule,
     ArticlesModule,
     ChatMessagesModule,
+    RatingModule,
     MistralModule,
     AiModule,
   ],

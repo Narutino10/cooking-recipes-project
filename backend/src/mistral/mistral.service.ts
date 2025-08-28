@@ -73,8 +73,11 @@ export class MistralService {
 
     // Try to generate an image if an external image API is configured
     try {
-      const prompt = `${recipe.name} - image of the prepared dish`; // simple prompt
-      const img = await this.generateImage(prompt);
+      const originalPrompt = `${recipe.name} - image of the prepared dish`;
+      const englishPrompt = this.translatePromptToEnglish(originalPrompt);
+      console.log('Original prompt:', originalPrompt);
+      console.log('Translated prompt:', englishPrompt);
+      const img = await this.generateImage(englishPrompt);
       if (img) recipe.imageUrl = img;
     } catch {
       // ignore image generation errors and keep mock/random image
@@ -204,56 +207,66 @@ export class MistralService {
     apiUrl?: string,
   ): Promise<string | undefined> {
     if (!apiKey) return undefined;
+
+    // Use the current Stability AI API v2 endpoint
     const url =
-      apiUrl ||
-      'https://api.stability.ai/v1/generation/stable-diffusion-512-v2-1/text-to-image';
+      apiUrl || 'https://api.stability.ai/v2beta/stable-image/generate/core';
+
+    console.log('Sending to Stability AI:', prompt);
 
     try {
-      const body = {
-        text_prompts: [{ text: prompt }],
-        cfg_scale: 7,
-        height: 512,
-        width: 512,
-        samples: 1,
-      } as Record<string, unknown>;
+      const formData = new FormData();
+      formData.append('prompt', prompt);
+      formData.append('output_format', 'png');
+      formData.append('aspect_ratio', '1:1');
 
-      const resp = await axios.post(url, body, {
+      const resp = await axios.post(url, formData, {
         headers: {
           Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
+          Accept: 'image/*',
         },
+        responseType: 'arraybuffer',
         timeout: 30000,
       });
 
-      const data: unknown = resp.data;
-      const obj = data as Record<string, unknown>;
+      // Stability AI v2 returns the image directly as binary data
+      if (resp.data && Buffer.isBuffer(resp.data) && resp.data.length > 0) {
+        // Convert to base64 and save
+        const base64 = Buffer.from(resp.data).toString('base64');
+        const dataUrl = `data:image/png;base64,${base64}`;
+        return this.saveBase64Image(dataUrl);
+      }
 
-      // Many stability responses include base64-encoded images under nested fields.
-      // We try a few common locations, then fall back to the generic handler below.
-      // Try top-level 'artifacts' array with 'base64'
-      const artifacts = obj['artifacts'];
-      if (Array.isArray(artifacts) && artifacts.length > 0) {
-        const first = artifacts[0] as Record<string, unknown>;
-        const firstBase64 = first['base64'];
-        if (typeof firstBase64 === 'string' && firstBase64.length > 0) {
-          return this.saveBase64Image(firstBase64);
-        }
-        // sometimes they return a URL
-        const firstUrl = first['url'];
-        if (typeof firstUrl === 'string' && firstUrl.length > 0) {
-          return firstUrl;
+      return undefined;
+    } catch (error) {
+      const err = error as { response?: { data?: unknown }; message?: string };
+
+      // Try to parse error response if it's a buffer
+      let errorMessage = err.message || 'Unknown error';
+      if (err.response?.data) {
+        if (Buffer.isBuffer(err.response.data)) {
+          try {
+            const errorText = err.response.data.toString('utf8');
+            const errorJson = JSON.parse(errorText) as {
+              errors?: string[];
+              message?: string;
+            };
+            if (errorJson.errors && Array.isArray(errorJson.errors)) {
+              errorMessage = errorJson.errors.join(', ');
+            } else if (errorJson.message) {
+              errorMessage = errorJson.message;
+            } else {
+              errorMessage = errorText;
+            }
+          } catch {
+            errorMessage = err.response.data.toString('utf8');
+          }
+        } else if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
         }
       }
 
-      // generic fallback: accept { url } or { base64 } top-level
-      const urlVal = obj['url'];
-      if (typeof urlVal === 'string' && urlVal.length > 0) return urlVal;
-      const base64Val = obj['base64'];
-      if (typeof base64Val === 'string' && base64Val.length > 0)
-        return this.saveBase64Image(base64Val);
-
-      return undefined;
-    } catch {
+      console.error('Stability AI API error:', errorMessage);
       return undefined;
     }
   }
@@ -518,6 +531,57 @@ export class MistralService {
   }
 
   async generateImageFromPrompt(prompt: string): Promise<string | undefined> {
-    return this.generateImage(prompt);
+    // Translate the prompt to English before sending to Stability AI
+    const englishPrompt = this.translatePromptToEnglish(prompt);
+    console.log('Original prompt:', prompt);
+    console.log('Translated prompt:', englishPrompt);
+    return this.generateImage(englishPrompt);
+  }
+
+  private translatePromptToEnglish(prompt: string): string {
+    // Simple translation mapping for common French cooking terms
+    const translations: Record<string, string> = {
+      Délicieux: 'Delicious',
+      Savoureux: 'Tasty',
+      Parfumé: 'Fragrant',
+      Traditionnel: 'Traditional',
+      Moderne: 'Modern',
+      sauté: 'sautéed',
+      grillé: 'grilled',
+      mijoté: 'simmered',
+      rôti: 'roasted',
+      'en sauce': 'in sauce',
+      légumes: 'vegetables',
+      viande: 'meat',
+      poisson: 'fish',
+      poulet: 'chicken',
+      riz: 'rice',
+      pâtes: 'pasta',
+      salade: 'salad',
+      soupe: 'soup',
+      dessert: 'dessert',
+      fromage: 'cheese',
+      œuf: 'egg',
+      oeuf: 'egg',
+      pain: 'bread',
+      huile: 'oil',
+      beurre: 'butter',
+      sel: 'salt',
+      poivre: 'pepper',
+      ail: 'garlic',
+      oignon: 'onion',
+      tomate: 'tomato',
+      carotte: 'carrot',
+      pomme: 'apple',
+      banane: 'banana',
+      'image of the prepared dish': 'image of the prepared dish',
+    };
+
+    let translated = prompt;
+    for (const [french, english] of Object.entries(translations)) {
+      translated = translated.replace(new RegExp(french, 'gi'), english);
+    }
+
+    return translated;
   }
 }

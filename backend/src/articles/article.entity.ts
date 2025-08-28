@@ -64,8 +64,11 @@ export class Article {
   @Column({ type: 'simple-array', nullable: true })
   tags: string[];
 
+  @Column({ default: false })
+  isFeatured: boolean;
+
   @Column({ nullable: true })
-  featuredImage: string;
+  imageUrl: string;
 
   @ManyToOne(() => User)
   author: User;

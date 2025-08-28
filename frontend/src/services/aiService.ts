@@ -28,6 +28,56 @@ export interface GenerateRecipeWithImageRequest extends GenerateRecipeRequest {
   imageStyle?: string;
 }
 
+// Simple translation function for French cooking terms
+const translateToEnglish = (text: string): string => {
+  const translations: Record<string, string> = {
+    'Délicieux': 'Delicious',
+    'Savoureux': 'Tasty',
+    'Parfumé': 'Fragrant',
+    'Traditionnel': 'Traditional',
+    'Moderne': 'Modern',
+    'sauté': 'sautéed',
+    'grillé': 'grilled',
+    'mijoté': 'simmered',
+    'rôti': 'roasted',
+    'en sauce': 'in sauce',
+    'légumes': 'vegetables',
+    'viande': 'meat',
+    'poisson': 'fish',
+    'poulet': 'chicken',
+    'riz': 'rice',
+    'pâtes': 'pasta',
+    'salade': 'salad',
+    'soupe': 'soup',
+    'dessert': 'dessert',
+    'fromage': 'cheese',
+    'œuf': 'egg',
+    'oeuf': 'egg',
+    'pain': 'bread',
+    'huile': 'oil',
+    'beurre': 'butter',
+    'sel': 'salt',
+    'poivre': 'pepper',
+    'ail': 'garlic',
+    'oignon': 'onion',
+    'tomate': 'tomato',
+    'carotte': 'carrot',
+    'pomme': 'apple',
+    'banane': 'banana',
+    'gourmet': 'gourmet',
+    'végétarien': 'vegetarian',
+    'végétalien': 'vegan',
+    'méditerranéen': 'mediterranean'
+  };
+
+  let translated = text;
+  for (const [french, english] of Object.entries(translations)) {
+    translated = translated.replace(new RegExp(french, 'gi'), english);
+  }
+
+  return translated;
+};
+
 export const generateRecipe = async (data: GenerateRecipeRequest): Promise<GeneratedRecipe> => {
   const response = await axios.post(`${API_URL}/generate-recipe`, data);
   return response.data;
@@ -54,12 +104,23 @@ export const improveRecipe = async (
 // New functions using backend proxy for AI APIs
 export const generateRecipeWithMistral = async (data: GenerateRecipeRequest): Promise<string> => {
   try {
+    // Extract only the fields needed for the DTO
+    const { ingredients, nbPersons, intolerances, dietType, cookingTime } = data;
+    
+    const payload = {
+      ingredients,
+      nbPersons,
+      intolerances,
+      dietType,
+      cookingTime,
+    };
+    
     // Test endpoint first
-    console.log('Sending data to test endpoint:', data);
-    const testResponse = await axios.post(`${API_URL}/test`, data);
+    console.log('Sending data to test endpoint:', payload);
+    const testResponse = await axios.post(`${API_URL}/test`, payload);
     console.log('Test response:', testResponse.data);
     
-    const response = await axios.post(`${API_URL}/generate-recipe-text`, data);
+    const response = await axios.post(`${API_URL}/generate-recipe-text`, payload);
     return response.data.recipeText;
   } catch (error) {
     console.error('Erreur lors de l\'appel au backend pour Mistral:', error);
@@ -109,7 +170,13 @@ export const generateRecipeWithImage = async (data: GenerateRecipeWithImageReque
 
     // Generate image if requested
     if (data.generateImage) {
-      const imagePrompt = `Une belle photo culinaire professionnelle de: ${recipe.name}, plat ${data.dietType || 'gourmand'}, présentation élégante, éclairage naturel, style gastronomique`;
+      // Translate the recipe name to English for the image prompt
+      const englishRecipeName = translateToEnglish(recipe.name);
+      const englishDietType = data.dietType ? translateToEnglish(data.dietType) : 'gourmet';
+      const imagePrompt = `A beautiful professional culinary photo of: ${englishRecipeName}, ${englishDietType} dish, elegant presentation, natural lighting, gastronomic style`;
+      console.log('Original recipe name:', recipe.name);
+      console.log('Translated recipe name:', englishRecipeName);
+      console.log('Image prompt:', imagePrompt);
       generatedImage = await generateImageWithStability({
         prompt: imagePrompt,
         style: data.imageStyle

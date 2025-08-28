@@ -107,7 +107,10 @@ export class AiController {
   }
 
   @Post('test')
-  testEndpoint(@Body() body: any): { received: any; message: string } {
+  testEndpoint(@Body() body: Record<string, unknown>): {
+    received: Record<string, unknown>;
+    message: string;
+  } {
     console.log('Test endpoint received:', JSON.stringify(body, null, 2));
     return { received: body, message: 'Test successful' };
   }

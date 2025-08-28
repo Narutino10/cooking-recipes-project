@@ -41,19 +41,45 @@ export class ArticlesController {
     @Query('type') type?: ArticleType,
     @Query('category') category?: string,
     @Query('publishedOnly') publishedOnly?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     const publishedOnlyBool = publishedOnly === 'false' ? false : true;
-    return this.articlesService.findAll(type, category, publishedOnlyBool);
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+    return this.articlesService.findAll(
+      type,
+      category,
+      publishedOnlyBool,
+      pageNum,
+      limitNum,
+    );
   }
 
-  @Get('categories')
-  getCategories(@Query('type') type?: ArticleType) {
-    return this.articlesService.getCategories(type);
+  @Get('category/:category')
+  getArticlesByCategory(
+    @Param('category') category: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+    return this.articlesService.getArticlesByCategory(
+      category,
+      pageNum,
+      limitNum,
+    );
   }
 
-  @Get('tags')
-  getTags() {
-    return this.articlesService.getTags();
+  @Get('search')
+  searchArticles(
+    @Query('q') query: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+    return this.articlesService.searchArticles(query, pageNum, limitNum);
   }
 
   @Get(':id')

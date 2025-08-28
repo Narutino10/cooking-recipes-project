@@ -6,6 +6,12 @@ import { User } from '../users/user.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
+export interface TransformedArticle extends Article {
+  isPublished: boolean;
+  viewCount: number;
+  likeCount: number;
+}
+
 @Injectable()
 export class ArticlesService {
   constructor(
@@ -40,7 +46,14 @@ export class ArticlesService {
     type?: ArticleType,
     category?: string,
     publishedOnly = true,
-  ): Promise<Article[]> {
+    page = 1,
+    limit = 10,
+  ): Promise<{
+    articles: TransformedArticle[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const query = this.articlesRepository
       .createQueryBuilder('article')
       .leftJoinAndSelect('article.author', 'author')
@@ -60,10 +73,31 @@ export class ArticlesService {
       });
     }
 
-    return query.getMany();
+    // Get total count
+    const total = await query.getCount();
+
+    // Apply pagination
+    query.skip((page - 1) * limit).take(limit);
+
+    const articles = await query.getMany();
+
+    // Transform articles to match frontend expectations
+    const transformedArticles = articles.map((article) => ({
+      ...article,
+      isPublished: article.status === ArticleStatus.PUBLISHED,
+      viewCount: article.views,
+      likeCount: article.likes,
+    }));
+
+    return {
+      articles: transformedArticles,
+      total,
+      page,
+      limit,
+    };
   }
 
-  async findOne(id: string): Promise<Article> {
+  async findOne(id: string): Promise<TransformedArticle> {
     const article = await this.articlesRepository.findOne({
       where: { id },
       relations: ['author', 'comments', 'comments.author'],
@@ -77,7 +111,13 @@ export class ArticlesService {
     article.views += 1;
     await this.articlesRepository.save(article);
 
-    return article;
+    // Transform article to match frontend expectations
+    return {
+      ...article,
+      isPublished: article.status === ArticleStatus.PUBLISHED,
+      viewCount: article.views,
+      likeCount: article.likes,
+    };
   }
 
   async update(
@@ -85,7 +125,14 @@ export class ArticlesService {
     updateArticleDto: UpdateArticleDto,
     userId: string,
   ): Promise<Article> {
-    const article = await this.findOne(id);
+    const article = await this.articlesRepository.findOne({
+      where: { id },
+      relations: ['author'],
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
 
     if (article.authorId !== userId) {
       throw new NotFoundException('You can only update your own articles');
@@ -104,7 +151,14 @@ export class ArticlesService {
   }
 
   async remove(id: string, userId: string): Promise<void> {
-    const article = await this.findOne(id);
+    const article = await this.articlesRepository.findOne({
+      where: { id },
+      relations: ['author'],
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
 
     if (article.authorId !== userId) {
       throw new NotFoundException('You can only delete your own articles');
@@ -131,16 +185,61 @@ export class ArticlesService {
       );
   }
 
-  async getTags(): Promise<string[]> {
-    const articles = await this.articlesRepository.find({
-      select: ['tags'],
-      where: { status: ArticleStatus.PUBLISHED },
-    });
+  async getArticlesByCategory(
+    category: string,
+    page = 1,
+    limit = 10,
+  ): Promise<{
+    articles: TransformedArticle[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const result = await this.findAll(undefined, category, true, page, limit);
+    return result;
+  }
 
-    const allTags = articles
-      .flatMap((article) => article.tags || [])
-      .filter((tag, index, array) => array.indexOf(tag) === index);
+  async searchArticles(
+    query: string,
+    page = 1,
+    limit = 10,
+  ): Promise<{
+    articles: TransformedArticle[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const searchQuery = this.articlesRepository
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.author', 'author')
+      .where('article.status = :status', { status: ArticleStatus.PUBLISHED })
+      .andWhere(
+        '(article.title ILIKE :query OR article.content ILIKE :query OR article.tags::text ILIKE :query)',
+        { query: `%${query}%` },
+      )
+      .orderBy('article.createdAt', 'DESC');
 
-    return allTags;
+    // Get total count
+    const total = await searchQuery.getCount();
+
+    // Apply pagination
+    searchQuery.skip((page - 1) * limit).take(limit);
+
+    const articles = await searchQuery.getMany();
+
+    // Transform articles to match frontend expectations
+    const transformedArticles = articles.map((article) => ({
+      ...article,
+      isPublished: article.status === ArticleStatus.PUBLISHED,
+      viewCount: article.views,
+      likeCount: article.likes,
+    }));
+
+    return {
+      articles: transformedArticles,
+      total,
+      page,
+      limit,
+    };
   }
 }

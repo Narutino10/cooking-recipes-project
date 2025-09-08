@@ -1,95 +1,240 @@
 .accordion {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
-  margin-bottom: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafb 100%);
+  border-radius: 20px;
+  box-shadow: 
+    0 4px 25px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(229, 236, 246, 0.6);
+  margin-bottom: 20px;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(20px);
 
   &:hover {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 
+      0 8px 40px rgba(102, 126, 234, 0.15),
+      0 0 0 1px rgba(102, 126, 234, 0.2);
   }
 
   &.open {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 
+      0 12px 50px rgba(102, 126, 234, 0.2),
+      0 0 0 1px rgba(102, 126, 234, 0.3);
+    
+    .accordion-header {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+      
+      .accordion-toggle {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: rotate(180deg);
+      }
+    }
   }
 
   .accordion-header {
     width: 100%;
-    background: none;
+    background: transparent;
     border: none;
-    padding: 20px 24px;
+    padding: 24px 28px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     text-align: left;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+      border-radius: 20px 0 0 20px;
+    }
 
     &:hover {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+      
+      &::before {
+        width: 4px;
+      }
     }
 
     .accordion-title {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 14px;
+      z-index: 1;
+      position: relative;
 
       .accordion-icon {
-        font-size: 18px;
+        font-size: 22px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
       }
 
       .accordion-text {
-        font-size: 18px;
-        font-weight: 600;
-        color: #2c3e50;
+        font-size: 19px;
+        font-weight: 700;
+        color: #1a202c;
+        letter-spacing: -0.02em;
+        line-height: 1.3;
       }
     }
 
     .accordion-toggle {
-      font-size: 20px;
-      font-weight: bold;
+      font-size: 16px;
+      font-weight: 600;
       color: #667eea;
-      transition: transform 0.3s ease;
-      width: 24px;
-      height: 24px;
+      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 50%;
       background: rgba(102, 126, 234, 0.1);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
     }
   }
 
   .accordion-content {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.4s ease-in-out;
+    transition: max-height 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
     &.open {
-      max-height: 2000px; // Ajuster selon le contenu
+      max-height: 2500px;
     }
 
     .accordion-body {
-      padding: 0 24px 24px 24px;
-      border-top: 1px solid #e9ecef;
+      padding: 0 28px 28px 28px;
+      border-top: 1px solid rgba(229, 236, 246, 0.8);
+      margin-top: 8px;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 28px;
+        right: 28px;
+        top: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, rgba(102, 126, 234, 0.3) 20%, rgba(102, 126, 234, 0.3) 80%, transparent 100%);
+      }
     }
   }
 }
 
-// Animation pour l'ouverture/fermeture
+// Animation améliorée pour l'ouverture/fermeture
 .accordion-content.open {
-  animation: slideDown 0.4s ease-out;
+  animation: slideDown 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 @keyframes slideDown {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-15px);
   }
-  to {
+  30% {
+    opacity: 0.3;
+  }
+  100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// Styles pour les différents types d'accordéons
+.accordion {
+  &.accordion-instructions {
+    border-left: 4px solid #3498db;
+    
+    .accordion-header .accordion-toggle {
+      background: rgba(52, 152, 219, 0.1);
+      color: #3498db;
+    }
+    
+    &.open .accordion-header .accordion-toggle {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    }
+  }
+
+  &.accordion-ingredients {
+    border-left: 4px solid #27ae60;
+    
+    .accordion-header .accordion-toggle {
+      background: rgba(39, 174, 96, 0.1);
+      color: #27ae60;
+    }
+    
+    &.open .accordion-header .accordion-toggle {
+      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    }
+  }
+
+  &.accordion-nutrition {
+    border-left: 4px solid #f39c12;
+    
+    .accordion-header .accordion-toggle {
+      background: rgba(243, 156, 18, 0.1);
+      color: #f39c12;
+    }
+    
+    &.open .accordion-header .accordion-toggle {
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    }
+  }
+
+  &.accordion-ratings {
+    border-left: 4px solid #e74c3c;
+    
+    .accordion-header .accordion-toggle {
+      background: rgba(231, 76, 60, 0.1);
+      color: #e74c3c;
+    }
+    
+    &.open .accordion-header .accordion-toggle {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    }
+  }
+}
+
+// Responsive design amélioré
+@media (max-width: 768px) {
+  .accordion {
+    margin-bottom: 16px;
+    border-radius: 16px;
+
+    .accordion-header {
+      padding: 20px 20px;
+
+      .accordion-title {
+        gap: 12px;
+
+        .accordion-icon {
+          font-size: 20px;
+        }
+
+        .accordion-text {
+          font-size: 17px;
+        }
+      }
+
+      .accordion-toggle {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+      }
+    }
+
+    .accordion-content .accordion-body {
+      padding: 0 20px 24px 20px;
+    }
   }
 }

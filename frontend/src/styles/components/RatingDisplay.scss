@@ -1,57 +1,82 @@
 // Variables CSS pour une meilleure maintenabilité
 :root {
-  --rating-primary-color: #2c3e50;
-  --rating-secondary-color: #34495e;
-  --rating-accent-color: #3498db;
-  --rating-warning-color: #e74c3c;
-  --rating-star-color: #f39c12;
-  --rating-star-empty: #ddd;
-  --rating-background: rgba(255, 255, 255, 0.95);
-  --rating-border: rgba(255, 255, 255, 0.2);
-  --rating-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --rating-border-radius: 20px;
-  --rating-transition: all 0.3s ease;
-  --rating-spacing-sm: 0.5rem;
-  --rating-spacing-md: 1rem;
-  --rating-spacing-lg: 1.5rem;
-  --rating-spacing-xl: 2rem;
+  --rating-primary-color: #1a202c;
+  --rating-secondary-color: #2d3748;
+  --rating-accent-color: #667eea;
+  --rating-warning-color: #f56565;
+  --rating-star-color: #ed8936;
+  --rating-star-empty: #e2e8f0;
+  --rating-background: rgba(255, 255, 255, 0.92);
+  --rating-border: rgba(255, 255, 255, 0.3);
+  --rating-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  --rating-border-radius: 24px;
+  --rating-transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --rating-spacing-sm: 0.75rem;
+  --rating-spacing-md: 1.25rem;
+  --rating-spacing-lg: 1.75rem;
+  --rating-spacing-xl: 2.5rem;
 }
 
 .rating-display {
   .rating-stats {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--rating-background);
+    backdrop-filter: blur(20px);
+    border-radius: var(--rating-border-radius);
+    padding: var(--rating-spacing-xl);
+    margin-bottom: var(--rating-spacing-xl);
+    box-shadow: 
+      var(--rating-shadow),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--rating-border);
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%);
+      border-radius: var(--rating-border-radius);
+      pointer-events: none;
+    }
 
     .stats-main {
       display: flex;
-      gap: 2rem;
+      gap: var(--rating-spacing-xl);
       align-items: center;
+      position: relative;
+      z-index: 1;
 
       .average-rating {
         text-align: center;
-        min-width: 120px;
+        min-width: 140px;
 
         .average-number {
           display: block;
-          font-size: 3rem;
-          font-weight: 700;
-          color: #2c3e50;
-          margin-bottom: 0.5rem;
-          background: linear-gradient(45deg, #667eea, #764ba2);
+          font-size: 3.5rem;
+          font-weight: 800;
+          color: var(--rating-primary-color);
+          margin-bottom: 0.75rem;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
+          letter-spacing: -0.02em;
+          text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .stars-container {
           .star {
-            font-size: 1.2rem;
-            margin: 0 0.1rem;
+            font-size: 1.4rem;
+            margin: 0 0.15rem;
+            filter: drop-shadow(0 2px 4px rgba(237, 137, 54, 0.3));
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: scale(1.1);
+            }
           }
         }
       }
@@ -61,46 +86,68 @@
 
         .total-ratings {
           display: block;
-          font-size: 1.1rem;
-          color: #34495e;
-          font-weight: 600;
-          margin-bottom: 1rem;
+          font-size: 1.2rem;
+          color: var(--rating-secondary-color);
+          font-weight: 700;
+          margin-bottom: var(--rating-spacing-md);
+          letter-spacing: -0.01em;
         }
 
         .rating-distribution {
           .distribution-bar {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.5rem;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: translateX(4px);
+            }
 
             .star-count {
-              min-width: 30px;
-              font-size: 0.9rem;
-              color: #7f8c8d;
-              font-weight: 500;
+              min-width: 35px;
+              font-size: 1rem;
+              color: var(--rating-secondary-color);
+              font-weight: 600;
             }
 
             .bar-container {
               flex: 1;
-              height: 8px;
-              background: #e9ecef;
-              border-radius: 4px;
+              height: 10px;
+              background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+              border-radius: 8px;
               overflow: hidden;
+              box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
 
               .bar-fill {
                 height: 100%;
-                background: linear-gradient(45deg, #f39c12, #e67e22);
-                border-radius: 4px;
-                transition: width 0.3s ease;
+                background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+                border-radius: 8px;
+                transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 2px 8px rgba(237, 137, 54, 0.3);
+                position: relative;
+
+                &::after {
+                  content: '';
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  bottom: 0;
+                  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+                  border-radius: 8px;
+                }
               }
             }
 
             .count-text {
-              min-width: 20px;
-              font-size: 0.8rem;
-              color: #95a5a6;
+              min-width: 25px;
+              font-size: 0.9rem;
+              color: #a0aec0;
               text-align: right;
+              font-weight: 600;
             }
           }
         }
@@ -110,147 +157,256 @@
 
   .ratings-list {
     h4 {
-      margin: 0 0 1.5rem 0;
-      color: #2c3e50;
-      font-size: 1.3rem;
-      font-weight: 600;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #e9ecef;
+      margin: 0 0 var(--rating-spacing-lg) 0;
+      color: var(--rating-primary-color);
+      font-size: 1.5rem;
+      font-weight: 700;
+      padding-bottom: 0.75rem;
+      border-bottom: 3px solid #e2e8f0;
+      letter-spacing: -0.01em;
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 3px;
+      }
     }
 
     .no-ratings {
       text-align: center;
-      padding: 3rem 2rem;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      padding: 3.5rem 2.5rem;
+      background: var(--rating-background);
+      backdrop-filter: blur(20px);
+      border-radius: var(--rating-border-radius);
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      border: 1px solid var(--rating-border);
 
       p {
         margin: 0;
-        color: #7f8c8d;
-        font-size: 1.1rem;
+        color: #4a5568;
+        font-size: 1.2rem;
         font-style: italic;
+        font-weight: 600;
+
+        &::before {
+          content: '💭';
+          display: block;
+          font-size: 2.5rem;
+          margin-bottom: 1rem;
+          filter: grayscale(0.3);
+        }
       }
     }
 
     .rating-item {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      transition: all 0.3s ease;
+      background: var(--rating-background);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: var(--rating-spacing-lg);
+      margin-bottom: var(--rating-spacing-md);
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      border: 1px solid var(--rating-border);
+      transition: var(--rating-transition);
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%);
+        border-radius: 20px;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+      }
 
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        transform: translateY(-6px) scale(1.01);
+        box-shadow: 
+          0 20px 60px rgba(0, 0, 0, 0.12),
+          0 0 0 1px rgba(102, 126, 234, 0.1);
+
+        &::before {
+          opacity: 1;
+        }
       }
 
       .rating-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 1rem;
+        margin-bottom: var(--rating-spacing-md);
+        position: relative;
+        z-index: 1;
 
         .user-info {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 1rem;
 
           .user-avatar {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
+            font-weight: 700;
             color: white;
-            font-size: 0.9rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            font-size: 1rem;
+            box-shadow: 
+              0 4px 16px rgba(102, 126, 234, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: scale(1.1);
+              box-shadow: 
+                0 6px 24px rgba(102, 126, 234, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            }
           }
 
           .user-details {
             .user-name {
               display: block;
-              font-weight: 600;
-              color: #2c3e50;
-              margin-bottom: 0.25rem;
+              font-weight: 700;
+              color: var(--rating-primary-color);
+              margin-bottom: 0.3rem;
+              font-size: 1.05rem;
+              letter-spacing: -0.01em;
             }
 
             .rating-date {
               display: block;
-              font-size: 0.8rem;
-              color: #95a5a6;
+              font-size: 0.85rem;
+              color: #a0aec0;
+              font-weight: 600;
             }
           }
         }
 
         .rating-stars {
           .star {
-            font-size: 1rem;
-            margin: 0 0.1rem;
+            font-size: 1.1rem;
+            margin: 0 0.15rem;
+            filter: drop-shadow(0 2px 4px rgba(237, 137, 54, 0.3));
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: scale(1.15);
+            }
           }
         }
       }
 
       .rating-comment {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid #e9ecef;
+        margin-top: var(--rating-spacing-md);
+        padding-top: var(--rating-spacing-md);
+        border-top: 2px solid #f7fafc;
+        position: relative;
+        z-index: 1;
 
         p {
           margin: 0;
-          color: #34495e;
-          line-height: 1.5;
-          font-size: 0.95rem;
+          color: var(--rating-secondary-color);
+          line-height: 1.7;
+          font-size: 1rem;
+          font-weight: 500;
+          background: linear-gradient(135deg, rgba(247, 250, 252, 0.6) 0%, rgba(237, 242, 247, 0.6) 100%);
+          padding: 1rem 1.25rem;
+          border-radius: 16px;
+          border-left: 4px solid #e2e8f0;
         }
       }
 
       .rating-actions {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid #e9ecef;
+        margin-top: var(--rating-spacing-md);
+        padding-top: var(--rating-spacing-md);
+        border-top: 2px solid #f7fafc;
         display: flex;
-        gap: 0.75rem;
+        gap: 1rem;
         justify-content: flex-end;
+        position: relative;
+        z-index: 1;
 
         button {
           background: none;
           border: none;
-          padding: 0.5rem 1rem;
-          border-radius: 20px;
+          padding: 0.75rem 1.25rem;
+          border-radius: 25px;
           cursor: pointer;
-          font-size: 0.85rem;
-          font-weight: 500;
-          transition: all 0.3s ease;
+          font-size: 0.9rem;
+          font-weight: 600;
+          transition: var(--rating-transition);
+          position: relative;
+          overflow: hidden;
+
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: currentColor;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 25px;
+          }
 
           &.edit-btn {
-            color: #3498db;
-            border: 1px solid #3498db;
+            color: #667eea;
+            border: 2px solid #667eea;
 
             &:hover {
-              background: #3498db;
               color: white;
+              transform: translateY(-2px);
+              box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+
+              &::before {
+                opacity: 1;
+              }
             }
           }
 
           &.delete-btn {
-            color: #e74c3c;
-            border: 1px solid #e74c3c;
+            color: #f56565;
+            border: 2px solid #f56565;
 
             &:hover {
-              background: #e74c3c;
               color: white;
+              transform: translateY(-2px);
+              box-shadow: 0 8px 24px rgba(245, 101, 101, 0.3);
+
+              &::before {
+                opacity: 1;
+              }
             }
           }
 
           &:active {
             transform: scale(0.95);
+          }
+
+          span {
+            position: relative;
+            z-index: 1;
           }
         }
       }
@@ -258,19 +414,20 @@
   }
 
   .star {
-    color: #ddd;
-    transition: color 0.3s ease;
+    color: var(--rating-star-empty);
+    transition: all 0.3s ease;
+    position: relative;
 
     &.filled {
-      color: #f39c12;
+      color: var(--rating-star-color);
     }
 
     &.small {
-      font-size: 0.9rem;
+      font-size: 1rem;
     }
 
     &.medium {
-      font-size: 1.1rem;
+      font-size: 1.2rem;
     }
   }
 }
@@ -279,32 +436,36 @@
 @media (max-width: 768px) {
   .rating-display {
     .rating-stats {
-      padding: 1.5rem;
+      padding: var(--rating-spacing-lg);
 
       .stats-main {
         flex-direction: column;
-        gap: 1.5rem;
+        gap: var(--rating-spacing-lg);
         text-align: center;
 
         .average-rating {
           .average-number {
-            font-size: 2.5rem;
+            font-size: 3rem;
+          }
+
+          .stars-container .star {
+            font-size: 1.2rem;
           }
         }
 
         .stats-info {
           .rating-distribution {
             .distribution-bar {
-              gap: 0.5rem;
+              gap: 0.75rem;
 
               .star-count {
-                min-width: 25px;
-                font-size: 0.8rem;
+                min-width: 30px;
+                font-size: 0.9rem;
               }
 
               .count-text {
-                min-width: 15px;
-                font-size: 0.75rem;
+                min-width: 20px;
+                font-size: 0.8rem;
               }
             }
           }
@@ -314,21 +475,21 @@
 
     .ratings-list {
       h4 {
-        font-size: 1.1rem;
+        font-size: 1.3rem;
       }
 
       .rating-item {
-        padding: 1rem;
+        padding: var(--rating-spacing-md);
 
         .rating-header {
           flex-direction: column;
-          gap: 1rem;
+          gap: var(--rating-spacing-md);
           align-items: flex-start;
 
           .user-info {
             .user-avatar {
-              width: 40px;
-              height: 40px;
+              width: 45px;
+              height: 45px;
             }
           }
 
@@ -339,7 +500,8 @@
 
         .rating-comment {
           p {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            padding: 0.8rem 1rem;
           }
         }
 
@@ -347,8 +509,8 @@
           justify-content: center;
 
           button {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
           }
         }
       }
@@ -359,18 +521,22 @@
 @media (max-width: 480px) {
   .rating-display {
     .rating-stats {
-      padding: 1rem;
+      padding: var(--rating-spacing-md);
 
       .stats-main {
         .average-rating {
           .average-number {
-            font-size: 2rem;
+            font-size: 2.5rem;
+          }
+
+          .stars-container .star {
+            font-size: 1rem;
           }
         }
 
         .stats-info {
           .total-ratings {
-            font-size: 1rem;
+            font-size: 1.1rem;
           }
         }
       }
@@ -378,38 +544,47 @@
 
     .ratings-list {
       .rating-item {
-        padding: 0.75rem;
+        padding: 1rem;
 
         .rating-header {
           .user-info {
-            gap: 0.5rem;
+            gap: 0.75rem;
 
             .user-avatar {
-              width: 35px;
-              height: 35px;
+              width: 40px;
+              height: 40px;
+              font-size: 0.9rem;
             }
 
             .user-details {
               .user-name {
-                font-size: 0.9rem;
+                font-size: 1rem;
               }
 
               .rating-date {
-                font-size: 0.75rem;
+                font-size: 0.8rem;
               }
             }
           }
 
           .rating-stars {
             .star {
-              font-size: 0.9rem;
+              font-size: 1rem;
             }
           }
         }
 
         .rating-comment {
           p {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            padding: 0.75rem;
+          }
+        }
+
+        .rating-actions {
+          button {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.8rem;
           }
         }
       }

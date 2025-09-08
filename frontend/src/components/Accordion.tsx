@@ -16,8 +16,18 @@ const Accordion: React.FC<AccordionProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
+  // Déterminer la classe CSS basée sur le titre pour les couleurs spécifiques
+  const getAccordionClass = () => {
+    const baseClass = 'accordion';
+    if (title.toLowerCase().includes('instruction')) return `${baseClass} accordion-instructions`;
+    if (title.toLowerCase().includes('ingrédient')) return `${baseClass} accordion-ingredients`;
+    if (title.toLowerCase().includes('nutrition')) return `${baseClass} accordion-nutrition`;
+    if (title.toLowerCase().includes('avis') || title.toLowerCase().includes('commentaire')) return `${baseClass} accordion-ratings`;
+    return baseClass;
+  };
+
   return (
-    <div className={`accordion ${isOpen ? 'open' : ''}`}>
+    <div className={`${getAccordionClass()} ${isOpen ? 'open' : ''}`}>
       <button
         className="accordion-header"
         onClick={() => setIsOpen(!isOpen)}

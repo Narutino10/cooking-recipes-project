@@ -265,55 +265,30 @@
       }
     }
   }
-        border-radius: 12px;
-        border-left: 4px solid #27ae60;
-        transition: all 0.3s ease;
-
-        &:hover {
-          background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-          transform: translateX(4px);
-        }
-
-        .ingredient-bullet {
-          color: #27ae60;
-          font-weight: bold;
-          font-size: 18px;
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-
-        .ingredient-text {
-          line-height: 1.7;
-          color: #2d3748;
-          font-size: 16px;
-          font-weight: 500;
-        }
-      }
-    }
     
-    .intolerances-list {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      
-      .intolerance-badge {
-        background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
-        color: #c53030;
-        padding: 10px 16px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: 600;
-        border: 2px solid rgba(254, 215, 215, 0.8);
-        box-shadow: 0 4px 12px rgba(197, 48, 48, 0.2);
-        transition: all 0.3s ease;
+  .intolerances-list {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    
+    .intolerance-badge {
+      background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+      color: #c53030;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 2px solid rgba(254, 215, 215, 0.8);
+      box-shadow: 0 4px 12px rgba(197, 48, 48, 0.2);
+      transition: all 0.3s ease;
 
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(197, 48, 48, 0.3);
-        }
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(197, 48, 48, 0.3);
       }
     }
   }
+
 
   .recipe-aside {
     .aside-meta {
@@ -538,4 +513,5 @@
         }
       }
     }
-  }  
+  }
+}

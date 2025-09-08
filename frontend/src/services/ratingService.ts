@@ -1,19 +1,43 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 // Configuration d'axios pour inclure le token automatiquement
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 10000, // Timeout de 10 secondes
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Intercepteur pour ajouter automatiquement le token JWT
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
+
+// Intercepteur pour gérer les erreurs de réponse
+api.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      // Token expiré ou invalide
+      console.warn('Token expiré ou invalide détecté');
+      // Nettoyer le localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Rejeter l'erreur pour que le composant la gère
+      return Promise.reject(error);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Types pour les ratings
 export interface Rating {
@@ -52,74 +76,135 @@ export interface RatingsResponse {
   stats: RatingStats;
 }
 
-// Service pour gérer les ratings
+// Service pour gérer les ratings avec gestion d'erreurs améliorée
 export const ratingService = {
-  // Créer un nouveau rating
+  /**
+   * Crée un nouveau rating pour une recette
+   * @param ratingData - Données du rating à créer
+   * @returns Promise<Rating> - Le rating créé
+   * @throws Error si la création échoue
+   */
   async createRating(ratingData: CreateRatingDto): Promise<Rating> {
     try {
       const response = await api.post<Rating>('/ratings', ratingData);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la création du rating:', error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || 'Erreur lors de la création du rating';
+        throw new Error(message);
+      }
+      throw new Error('Erreur inattendue lors de la création du rating');
     }
   },
 
-  // Mettre à jour un rating existant
+  /**
+   * Met à jour un rating existant
+   * @param ratingId - ID du rating à modifier
+   * @param ratingData - Nouvelles données du rating
+   * @returns Promise<Rating> - Le rating mis à jour
+   * @throws Error si la mise à jour échoue
+   */
   async updateRating(ratingId: string, ratingData: UpdateRatingDto): Promise<Rating> {
     try {
       const response = await api.put<Rating>(`/ratings/${ratingId}`, ratingData);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la mise à jour du rating:', error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || 'Erreur lors de la mise à jour du rating';
+        throw new Error(message);
+      }
+      throw new Error('Erreur inattendue lors de la mise à jour du rating');
     }
   },
 
-  // Supprimer un rating
+  /**
+   * Supprime un rating
+   * @param ratingId - ID du rating à supprimer
+   * @throws Error si la suppression échoue
+   */
   async deleteRating(ratingId: string): Promise<void> {
     try {
       await api.delete(`/ratings/${ratingId}`);
     } catch (error) {
       console.error('Erreur lors de la suppression du rating:', error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || 'Erreur lors de la suppression du rating';
+        throw new Error(message);
+      }
+      throw new Error('Erreur inattendue lors de la suppression du rating');
     }
   },
 
-  // Récupérer tous les ratings d'une recette
+  /**
+   * Récupère tous les ratings d'une recette
+   * @param recipeId - ID de la recette
+   * @returns Promise<Rating[]> - Liste des ratings
+   * @throws Error si la récupération échoue
+   */
   async getRecipeRatings(recipeId: string): Promise<Rating[]> {
     try {
       const response = await api.get<Rating[]>(`/ratings/recipe/${recipeId}`);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des ratings:', error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || 'Erreur lors de la récupération des ratings';
+        throw new Error(message);
+      }
+      throw new Error('Erreur inattendue lors de la récupération des ratings');
     }
   },
 
-  // Récupérer les ratings de l'utilisateur connecté
+  /**
+   * Récupère les ratings de l'utilisateur connecté
+   * @returns Promise<Rating[]> - Liste des ratings de l'utilisateur
+   * @throws Error si la récupération échoue ou si l'utilisateur n'est pas authentifié
+   */
   async getUserRatings(): Promise<Rating[]> {
     try {
       const response = await api.get<Rating[]>('/ratings/user');
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des ratings utilisateur:', error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          throw new Error('Utilisateur non authentifié');
+        }
+        const message = error.response?.data?.message || 'Erreur lors de la récupération des ratings utilisateur';
+        throw new Error(message);
+      }
+      throw new Error('Erreur inattendue lors de la récupération des ratings utilisateur');
     }
   },
 
-  // Récupérer la moyenne des ratings d'une recette
+  /**
+   * Récupère la moyenne des ratings d'une recette
+   * @param recipeId - ID de la recette
+   * @returns Promise<RatingStats> - Statistiques des ratings
+   * @throws Error si la récupération échoue
+   */
   async getRecipeAverageRating(recipeId: string): Promise<RatingStats> {
     try {
       const response = await api.get<RatingStats>(`/ratings/recipe/${recipeId}/average`);
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la récupération de la moyenne:', error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || 'Erreur lors de la récupération de la moyenne';
+        throw new Error(message);
+      }
+      throw new Error('Erreur inattendue lors de la récupération de la moyenne');
     }
   },
 
-  // Récupérer le rating d'un utilisateur pour une recette spécifique
+  /**
+   * Récupère le rating d'un utilisateur pour une recette spécifique
+   * @param recipeId - ID de la recette
+   * @returns Promise<Rating | null> - Le rating de l'utilisateur ou null s'il n'existe pas
+   * @throws Error si la récupération échoue (sauf 404 qui retourne null)
+   */
   async getUserRatingForRecipe(recipeId: string): Promise<Rating | null> {
     try {
       const response = await api.get<Rating>(`/ratings/recipe/${recipeId}/user`);
@@ -134,11 +219,20 @@ export const ratingService = {
         throw error;
       }
       console.error('Erreur lors de la récupération du rating utilisateur:', error);
-      throw error;
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || 'Erreur lors de la récupération du rating utilisateur';
+        throw new Error(message);
+      }
+      throw new Error('Erreur inattendue lors de la récupération du rating utilisateur');
     }
   },
 
-  // Récupérer les ratings et statistiques d'une recette
+  /**
+   * Récupère les ratings et statistiques d'une recette en une seule requête
+   * @param recipeId - ID de la recette
+   * @returns Promise<RatingsResponse> - Ratings et statistiques
+   * @throws Error si la récupération échoue
+   */
   async getRecipeRatingsWithStats(recipeId: string): Promise<RatingsResponse> {
     try {
       const [ratings, stats] = await Promise.all([

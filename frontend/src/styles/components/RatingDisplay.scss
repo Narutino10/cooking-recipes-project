@@ -1,3 +1,22 @@
+// Variables CSS pour une meilleure maintenabilité
+:root {
+  --rating-primary-color: #2c3e50;
+  --rating-secondary-color: #34495e;
+  --rating-accent-color: #3498db;
+  --rating-warning-color: #e74c3c;
+  --rating-star-color: #f39c12;
+  --rating-star-empty: #ddd;
+  --rating-background: rgba(255, 255, 255, 0.95);
+  --rating-border: rgba(255, 255, 255, 0.2);
+  --rating-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --rating-border-radius: 20px;
+  --rating-transition: all 0.3s ease;
+  --rating-spacing-sm: 0.5rem;
+  --rating-spacing-md: 1rem;
+  --rating-spacing-lg: 1.5rem;
+  --rating-spacing-xl: 2rem;
+}
+
 .rating-display {
   .rating-stats {
     background: rgba(255, 255, 255, 0.95);

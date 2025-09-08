@@ -6,6 +6,7 @@ import { getIngredientsFromRecipe, getIntolerancesFromRecipe } from '../utils/re
 import RecipeImage from '../components/RecipeImage';
 import RatingForm from '../components/RatingForm';
 import RatingDisplay from '../components/RatingDisplay';
+import Accordion from '../components/Accordion';
 import { ratingService, Rating, RatingStats } from '../services/ratingService';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/pages/RecipeDetail.scss';
@@ -159,90 +160,97 @@ const RecipeDetail = () => {
       </div>
 
       <div className="recipe-body">
-        <div className="recipe-content">
-          <section className="section instructions">
-            <h3>📝 Instructions</h3>
-            {recipe.fields?.Instructions ? (
-              <div className="instructions-content">
-                {recipe.fields.Instructions.split(/\n{2,}|\n/).map((paragraph: string, i: number) => {
-                  const trimmed = paragraph.trim();
-                  if (!trimmed) return null;
-                  
-                  // Check if it's a numbered step
-                  const numberedMatch = trimmed.match(/^(\d+)\.?\s*(.+)$/);
-                  if (numberedMatch) {
-                    return (
-                      <div key={i} className="instruction-step">
-                        <span className="step-number">{numberedMatch[1]}</span>
-                        <span className="step-text">{numberedMatch[2]}</span>
-                      </div>
-                    );
-                  }
-                  
-                  // Check if it's a bullet point
-                  const bulletMatch = trimmed.match(/^[-•*]\s*(.+)$/);
-                  if (bulletMatch) {
-                    return (
-                      <div key={i} className="instruction-bullet">
-                        <span className="bullet">•</span>
-                        <span className="bullet-text">{bulletMatch[1]}</span>
-                      </div>
-                    );
-                  }
-                  
-                  // Regular paragraph
-                  return <p key={i}>{trimmed}</p>;
-                })}
+        <div className="recipe-main">
+          {/* Section Instructions et Ingrédients avec accordéons */}
+          <div className="recipe-preparation">
+            <div className="preparation-grid">
+              {/* Colonne Instructions */}
+              <div className="instructions-column">
+                <Accordion title="Instructions" icon="📝" defaultOpen={true}>
+                  {recipe.fields?.Instructions ? (
+                    <div className="instructions-content">
+                      {recipe.fields.Instructions.split(/\n{2,}|\n/).map((paragraph: string, i: number) => {
+                        const trimmed = paragraph.trim();
+                        if (!trimmed) return null;
+
+                        // Check if it's a numbered step
+                        const numberedMatch = trimmed.match(/^(\d+)\.?\s*(.+)$/);
+                        if (numberedMatch) {
+                          return (
+                            <div key={i} className="instruction-step">
+                              <span className="step-number">{numberedMatch[1]}</span>
+                              <span className="step-text">{numberedMatch[2]}</span>
+                            </div>
+                          );
+                        }
+
+                        // Check if it's a bullet point
+                        const bulletMatch = trimmed.match(/^[-•*]\s*(.+)$/);
+                        if (bulletMatch) {
+                          return (
+                            <div key={i} className="instruction-bullet">
+                              <span className="bullet">•</span>
+                              <span className="bullet-text">{bulletMatch[1]}</span>
+                            </div>
+                          );
+                        }
+
+                        // Regular paragraph
+                        return <p key={i}>{trimmed}</p>;
+                      })}
+                    </div>
+                  ) : (
+                    <p className="empty-instructions">Aucune instruction fournie pour cette recette.</p>
+                  )}
+                </Accordion>
               </div>
-            ) : (
-              <p className="empty-instructions">Aucune instruction fournie pour cette recette.</p>
-            )}
-          </section>
 
-          <section className="section ingredients">
-            <h3>🥕 Ingrédients</h3>
-            {ingredients.length > 0 ? (
-              <ul className="ingredients-list">
-                {ingredients.map((ing, idx) => (
-                  <li key={idx} className="ingredient-item">
-                    <span className="ingredient-bullet">•</span>
-                    <span className="ingredient-text">{ing}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>Aucun ingrédient spécifié</p>
-            )}
-          </section>
+              {/* Colonne Ingrédients */}
+              <div className="ingredients-column">
+                <Accordion title="Ingrédients" icon="🥕" defaultOpen={true}>
+                  {ingredients.length > 0 ? (
+                    <ul className="ingredients-list">
+                      {ingredients.map((ing, idx) => (
+                        <li key={idx} className="ingredient-item">
+                          <span className="ingredient-bullet">•</span>
+                          <span className="ingredient-text">{ing}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>Aucun ingrédient spécifié</p>
+                  )}
+                </Accordion>
 
-          {intolerances.length > 0 && (
-            <section className="section intolerances">
-              <h3>⚠️ Intolérances</h3>
-              <div className="intolerances-list">
-                {intolerances.map((intolerance, idx) => (
-                  <span key={idx} className="intolerance-badge">
-                    {intolerance}
-                  </span>
-                ))}
-              </div>
-            </section>
-          )}
+                {/* Informations nutritionnelles dans un accordéon */}
+                {recipe.fields?.['Analyse nutritionnelle'] && recipe.fields['Analyse nutritionnelle'].length > 0 && (
+                  <Accordion title="Analyse nutritionnelle" icon="📊">
+                    <div className="nutrition-content">
+                      {recipe.fields['Analyse nutritionnelle'].map((item, index) => (
+                        <p key={index}>{item}</p>
+                      ))}
+                    </div>
+                  </Accordion>
+                )}
 
-          {recipe.fields?.['Analyse nutritionnelle'] && recipe.fields['Analyse nutritionnelle'].length > 0 && (
-            <div className="nutrition-analysis">
-              <h3>📊 Analyse nutritionnelle</h3>
-              <div className="nutrition-content">
-                {recipe.fields['Analyse nutritionnelle'].map((item, index) => (
-                  <p key={index}>{item}</p>
-                ))}
+                {/* Intolérances dans un accordéon */}
+                {intolerances.length > 0 && (
+                  <Accordion title="Intolérances" icon="⚠️">
+                    <div className="intolerances-list">
+                      {intolerances.map((intolerance, idx) => (
+                        <span key={idx} className="intolerance-badge">
+                          {intolerance}
+                        </span>
+                      ))}
+                    </div>
+                  </Accordion>
+                )}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Section des avis et commentaires */}
-          <section className="section ratings-section">
-            <h3>⭐ Avis et commentaires</h3>
-
+          {/* Section des avis et commentaires avec accordéon */}
+          <Accordion title="Avis et commentaires" icon="⭐" defaultOpen={false}>
             {/* Affichage des statistiques et avis existants */}
             <RatingDisplay
               ratings={ratings}
@@ -291,7 +299,7 @@ const RecipeDetail = () => {
                 <p>🔒 Connectez-vous pour donner votre avis sur cette recette !</p>
               </div>
             )}
-          </section>
+          </Accordion>
         </div>
 
         <aside className="recipe-aside">

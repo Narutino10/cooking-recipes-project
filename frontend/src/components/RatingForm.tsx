@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './RatingForm.scss';
+import '../styles/components/RatingForm.scss';
 
 interface Rating {
   id: string;

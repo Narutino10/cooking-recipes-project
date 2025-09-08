@@ -10,6 +10,7 @@ import Accordion from '../components/Accordion';
 import { ratingService, Rating, RatingStats } from '../services/ratingService';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/pages/RecipeDetail.scss';
+import '../styles/pages/RecipeDetail.scss';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -207,43 +208,53 @@ const RecipeDetail = () => {
 
               {/* Colonne Ingrédients */}
               <div className="ingredients-column">
-                <Accordion title="Ingrédients" icon="🥕" defaultOpen={true}>
-                  {ingredients.length > 0 ? (
-                    <ul className="ingredients-list">
-                      {ingredients.map((ing, idx) => (
-                        <li key={idx} className="ingredient-item">
-                          <span className="ingredient-bullet">•</span>
-                          <span className="ingredient-text">{ing}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>Aucun ingrédient spécifié</p>
-                  )}
-                </Accordion>
-
-                {/* Informations nutritionnelles dans un accordéon */}
-                {recipe.fields?.['Analyse nutritionnelle'] && recipe.fields['Analyse nutritionnelle'].length > 0 && (
-                  <Accordion title="Analyse nutritionnelle" icon="📊">
-                    <div className="nutrition-content">
-                      {recipe.fields['Analyse nutritionnelle'].map((item, index) => (
-                        <p key={index}>{item}</p>
-                      ))}
-                    </div>
+                {/* Section Ingrédients - Bien séparée visuellement */}
+                <div className="ingredients-section">
+                  <Accordion title="Ingrédients" icon="🥕" defaultOpen={true}>
+                    {ingredients.length > 0 ? (
+                      <ul className="ingredients-list">
+                        {ingredients.map((ing, idx) => (
+                          <li key={idx} className="ingredient-item">
+                            <span className="ingredient-bullet">•</span>
+                            <span className="ingredient-text">{ing}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>Aucun ingrédient spécifié</p>
+                    )}
                   </Accordion>
+                </div>
+
+                {/* Section Nutrition - Bien séparée des ingrédients */}
+                {recipe.fields?.['Analyse nutritionnelle'] && recipe.fields['Analyse nutritionnelle'].length > 0 && (
+                  <div className="nutrition-section">
+                    <Accordion title="Valeurs nutritionnelles" icon="📊">
+                      <div className="nutrition-content">
+                        <div className="nutrition-header">
+                          Apports nutritionnels pour {recipe.fields?.['Nombre de personnes'] ?? 1} personne(s)
+                        </div>
+                        {recipe.fields['Analyse nutritionnelle'].map((item, index) => (
+                          <p key={index}>{item}</p>
+                        ))}
+                      </div>
+                    </Accordion>
+                  </div>
                 )}
 
-                {/* Intolérances dans un accordéon */}
+                {/* Section Intolérances - Distincte des autres */}
                 {intolerances.length > 0 && (
-                  <Accordion title="Intolérances" icon="⚠️">
-                    <div className="intolerances-list">
-                      {intolerances.map((intolerance, idx) => (
-                        <span key={idx} className="intolerance-badge">
-                          {intolerance}
-                        </span>
-                      ))}
-                    </div>
-                  </Accordion>
+                  <div className="intolerances-section">
+                    <Accordion title="Allergènes & Intolérances" icon="⚠️">
+                      <div className="intolerances-list">
+                        {intolerances.map((intolerance, idx) => (
+                          <span key={idx} className="intolerance-badge">
+                            {intolerance}
+                          </span>
+                        ))}
+                      </div>
+                    </Accordion>
+                  </div>
                 )}
               </div>
             </div>
@@ -306,19 +317,43 @@ const RecipeDetail = () => {
           <RecipeImage recipe={recipe} size="large" />
 
           <div className="aside-meta">
-            {((recipe.fields as any).prepTime || (recipe.fields as any).cookTime) && (
+            {/* Informations temporelles */}
+            {((recipe.fields as any)?.prepTime || (recipe.fields as any)?.cookTime) && (
               <div className="timing-info">
-                <h4>⏱️ Temps</h4>
+                <h4>Temps de préparation</h4>
                 <p>
                   Préparation: {(recipe.fields as any).prepTime ?? 0} min<br/>
                   Cuisson: {(recipe.fields as any).cookTime ?? 0} min
                 </p>
               </div>
             )}
+            
+            {/* Informations caloriques */}
             {(recipe.fields as any).calories && (
               <div className="calories-info">
-                <h4>🔥 Calories</h4>
+                <h4>Apport énergétique</h4>
                 <p>{(recipe.fields as any).calories} kcal</p>
+              </div>
+            )}
+
+            {/* Résumé nutritionnel rapide si disponible */}
+            {recipe.fields?.['Analyse nutritionnelle'] && recipe.fields['Analyse nutritionnelle'].length > 0 && (
+              <div className="nutrition-summary">
+                <h4>Résumé nutritionnel</h4>
+                <div className="nutrition-grid">
+                  {recipe.fields['Analyse nutritionnelle'].slice(0, 4).map((item: string, index: number) => {
+                    const parts = item.split(':');
+                    if (parts.length === 2) {
+                      return (
+                        <div key={index} className="nutrition-item">
+                          <span className="nutrition-value">{parts[1].trim()}</span>
+                          <span className="nutrition-label">{parts[0].trim()}</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
               </div>
             )}
           </div>

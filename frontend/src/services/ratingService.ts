@@ -129,6 +129,10 @@ export const ratingService = {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         return null;
       }
+      // Si le token est expiré (401), on laisse l'erreur remonter pour que le composant la gère
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        throw error;
+      }
       console.error('Erreur lors de la récupération du rating utilisateur:', error);
       throw error;
     }

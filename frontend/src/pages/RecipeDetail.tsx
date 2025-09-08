@@ -12,7 +12,7 @@ import '../styles/pages/RecipeDetail.scss';
 
 const RecipeDetail = () => {
   const { id } = useParams();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +53,7 @@ const RecipeDetail = () => {
 
     setRatingsLoading(true);
     try {
+      // Charger d'abord les données publiques (toujours disponibles)
       const [ratingsData, statsData] = await Promise.all([
         ratingService.getRecipeRatings(recipe.id),
         ratingService.getRecipeAverageRating(recipe.id),
@@ -61,10 +62,23 @@ const RecipeDetail = () => {
       setRatings(ratingsData);
       setRatingStats(statsData);
 
-      // Charger le rating de l'utilisateur connecté
+      // Charger le rating de l'utilisateur connecté (seulement si authentifié)
       if (isAuthenticated && user?.id) {
-        const userRatingData = await ratingService.getUserRatingForRecipe(recipe.id);
-        setUserRating(userRatingData);
+        try {
+          const userRatingData = await ratingService.getUserRatingForRecipe(recipe.id);
+          setUserRating(userRatingData);
+        } catch (error: any) {
+          // Si on reçoit une 401, le token est probablement expiré
+          if (error?.response?.status === 401) {
+            console.warn('Token expiré, déconnexion de l\'utilisateur');
+            // Déconnecter l'utilisateur et nettoyer la session
+            logout();
+            setUserRating(null);
+          } else {
+            // Pour les autres erreurs, juste logger
+            console.error('Erreur lors de la récupération du rating utilisateur:', error);
+          }
+        }
       }
     } catch (error) {
       console.error('Erreur lors du chargement des ratings:', error);

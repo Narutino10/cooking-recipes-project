@@ -25,6 +25,16 @@ interface RatingQueryResult {
   count: string | null;
 }
 
+// Extended User type with name property
+interface UserWithName extends User {
+  name: string;
+}
+
+// Extended Rating type with user that has name
+export interface RatingWithUserName extends Omit<Rating, 'user'> {
+  user: UserWithName;
+}
+
 @Injectable()
 export class RatingService {
   constructor(
@@ -110,12 +120,11 @@ export class RatingService {
 
     // Transform user data to include combined name
     if (updatedRating.user) {
-      Object.assign(updatedRating.user, {
-        name: `${updatedRating.user.firstName} ${updatedRating.user.lastName}`,
-      });
+      (updatedRating.user as UserWithName).name =
+        `${updatedRating.user.firstName} ${updatedRating.user.lastName}`;
     }
 
-    return updatedRating;
+    return updatedRating as RatingWithUserName;
   }
 
   async deleteRating(id: string, userId: string): Promise<void> {
@@ -135,7 +144,7 @@ export class RatingService {
     await this.ratingRepository.remove(rating);
   }
 
-  async getRecipeRatings(recipeId: string): Promise<Rating[]> {
+  async getRecipeRatings(recipeId: string): Promise<RatingWithUserName[]> {
     const ratings = await this.ratingRepository.find({
       where: { recipeId },
       relations: ['user'],
@@ -143,13 +152,12 @@ export class RatingService {
     });
 
     // Transform user data to include combined name
-    return ratings.map((rating) => {
+    return ratings.map((rating): RatingWithUserName => {
       if (rating.user) {
-        Object.assign(rating.user, {
-          name: `${rating.user.firstName} ${rating.user.lastName}`,
-        });
+        (rating.user as UserWithName).name =
+          `${rating.user.firstName} ${rating.user.lastName}`;
       }
-      return rating;
+      return rating as RatingWithUserName;
     });
   }
 
@@ -163,9 +171,8 @@ export class RatingService {
     // Transform user data to include combined name (though user is the same for all ratings)
     return ratings.map((rating) => {
       if (rating.user) {
-        Object.assign(rating.user, {
-          name: `${rating.user.firstName} ${rating.user.lastName}`,
-        });
+        (rating.user as UserWithName).name =
+          `${rating.user.firstName} ${rating.user.lastName}`;
       }
       return rating;
     });
